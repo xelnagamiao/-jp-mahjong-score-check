@@ -1,6 +1,15 @@
 import time
 start=time.time()
-
+"""
+使用majongdata函数输入主牌组以及副露牌组↓
+使用duizicheck、kezicheck函数将副露牌组可组成的牌组合并到主牌组中↓
+主牌组通过duizicheck 遍历出各种对子可能和无对子的可能↓
+主牌组遍历后的列表进入主程序通过duizicheck以及kezicheck进行判断，直到可组成的牌组为0↓
+获得包含主牌组组成的牌组以及副露牌组的集合↓
+通过组合计算符数↓
+通过组合计算番数↓
+对比总得分，输出结果**
+"""
 def majongdata(data):
     # 建立字牌匹配集
     savewordclass={"东", "南", "西", "北","发","白","中"}
@@ -58,15 +67,17 @@ def majongdata(data):
                 mjsave.append(Pai(59))
     return mjsave # 返回牌组mjsave
 class Pai(int):
+
     def __init__(self, value):
         super().__init__()
-        self.partner_group = 0
-        self.samenr = 0
-        self.highernr = 0
-        self.smallernr = 0
-        self.intnr = int(value)
-        self.sign = False
-    def reset(self):
+        self.partner_group = 0 # 拥有±1两张伙伴牌,可以以自身为中心组成顺子的数量的标记
+        self.samenr = 0 # 相同牌标记
+        self.highernr = 0 # 比自己更高的牌的标记
+        self.smallernr = 0 # 比自己更小的牌的标记
+        self.intnr = int(value) # Pai类的整数值
+        self.sign = False # 用以在duizicheck、dazicheck与kezicheck中标识自身是否被使用过
+
+    def reset(self): # reset方法用以在paizu.check中重置pai类的属性
         self.partner_group = 0
         self.samenr = 0
         self.highernr = 0
@@ -85,15 +96,15 @@ class Paizu(list):
         self.dazicheck = False # 代表是否还可以产生搭子
         self.kezicheck = False # 代表是否还可以产生刻子
         self.duizicheck = False # 代表是否还可以产生对子
-        self.combinations = [] # 存储牌组中已经成型的组合 其中d代表对 k代表刻 s代表顺 d12 代表在2索位置有一个对子
-        self.combinations_MP = []
-    def inherit(self,paizulist):
+        self.combinations = [] # 存储牌组中已经成型的组合 其中d代表对 k代表刻 s代表顺 例如 d12则代表在2索位置有一个对子
+        self.combinations_MP = [] # 存储牌组中副露的组合
+    def inherit(self,paizulist): # inherit方法用以在牌组进行多次check对牌组进行归纳的过程中继承先前牌组的属性
         self.roundnr = paizulist.roundnr # 继承向听数
         self.duizi = paizulist.duizi # 继承对子数
         self.dazi = paizulist.dazi # 继承搭子数
         self.kezi = paizulist.kezi # 继承刻子数
         self.combinations.extend(paizulist.combinations) # 继承牌组
-        self.combinations_MP.extend(paizulist.combinations_MP)
+        self.combinations_MP.extend(paizulist.combinations_MP) # 继承副露牌组
     def check(self): # paizu中的check方法用以重置pai的属性
         nrlist = [item.intnr for item in self] # 生成一个数字列表供后续比对
         for i in self:
@@ -187,6 +198,7 @@ def dazicheck(dazilist):
                         item.sign = True
                 break
         for item in dazilist:
+            # 判断牌组是否被标记，或是否是被标记牌的相邻牌，如不是则存储
             if item.intnr == samenr - 1 and signnr == 3:
                 signnr -= 1
             elif item.intnr == samenr and signnr == 2:
@@ -200,17 +212,20 @@ def dazicheck(dazilist):
         outputlist.append(mjlist)
 
 # 初始化变量
-alllist = []
-savelist = []
+alllist = [] # 未被确定遍历完成的牌组集合
+savelist = [] #
 endlist = []
 maxroundnr = 0
-r = 0
-majonglist=[]
+r = 0 # 循环次数
+majonglist=[] # 存储最近向听数的牌组
 
 # 引入数据
 #inputdata = majongdata("12233444456789s")
-inputdata = majongdata("23444456789s")
-inputMPdata1 = majongdata("123s")
+inputdata = majongdata("23444456789s") # 引入主牌组
+inputMPdata1 = majongdata("123s") # 引入副露1
+inputMPdata2 = majongdata("") # 引入副露2
+inputMPdata3 = majongdata("") # 引入副露3
+inputMPdata4 = majongdata("") # 引入副露4
 
 # 副露处理
 def MPcheck(mplist):
@@ -230,15 +245,18 @@ def MPcheck(mplist):
         MPlist = savelist
         savelist = []
     for i in MPlistoutput:
-        inputdata.roundnr = i.roundnr # 继承向听数
-        inputdata.duizi = i.duizi # 继承对子数
-        inputdata.dazi = i.dazi # 继承搭子数
-        inputdata.kezi = i.kezi # 继承刻子数
+        inputdata.roundnr += i.roundnr # 继承向听数
+        inputdata.duizi += i.duizi # 继承对子数
+        inputdata.dazi += i.dazi # 继承搭子数
+        inputdata.kezi += i.kezi # 继承刻子数
         inputdata.combinations_MP.extend(i.combinations) # 继承牌组
         for item in i:
             print("检测到副露输入中包含未成搭，刻")
             break
-MPcheck(inputMPdata1)
+MPcheck(inputMPdata1) # 处理副露1
+MPcheck(inputMPdata2) # 处理副露2
+MPcheck(inputMPdata3) # 处理副露3
+MPcheck(inputMPdata4) # 处理副露4
 
 # 对子处理
 inputdata.check()
@@ -303,10 +321,11 @@ def QDcheck(duizilist):
             alllist.append(savelist)
             print("七对子遍历：向听数为",14-mjlist.roundnr,"包含的牌组包括",mjlist.combinations,"剩余的牌包括",mjlist)
             break
-QDcheck(inputdata)
-GScheck(inputdata)
+if inputdata.roundnr == 0 : # 如果主牌组拥有14张牌 则进行十三幺和七对子型的检查
+    QDcheck(inputdata)
+    GScheck(inputdata)
 
-# 一般型遍历
+# 一般型遍历(主程序)
 while alllist:
     residue_paizu = 0 # 监控savelist中一共有多少牌组
     endlist_paizu = 0
@@ -345,8 +364,47 @@ for i in majonglist:
 # 计算符数
 def fu_count(fulist):
     keziset={}
+"""
+基础 = 20
 
+根据前端传参决定的符数
+荣和坎张 荣和单调 荣和两面 荣和双碰 荣和边张
+自摸坎张 自摸单调 自摸两面 自摸双碰 自摸边张
+门前荣和 += 10
+自摸和 + 2
+双碰两面 + 0
+坎张 单骑 + 2
+
+根据计算得出的符数
+役牌雀头 +2 双役牌 +4 客风 +0
+中张 明刻+2 暗刻+4 明杠+8 暗杠+16
+幺九字牌 明刻+4 暗刻+8 明杠+16 暗杠+32
+
+根据役决定的符数
+七对25
+平和自20
+副露配合30
+"""
 # 计算役数
+"""
+额外番数（不需要牌组判断的）：立直1 双立直2 一发1 自摸1 役牌1 岭上1 海底1 河底1 抢杠1 #宝牌 #红宝牌 #拔北
+形番：
+
+平和1：没有k的
+断幺1：全都存在duanyaoset中的
+一杯口1：相同的s**
+二杯口2：两个一杯口
+七对子2：通过QDcheck
+对对和2：全都存在keziset的
+三色同顺2 副露不为空1：存在s1* s2* s3* 的
+三色同刻2：存在k1* k2* k3* 的
+三暗刻3：主牌组三个刻子 的
+三杠子2：g*3
+混全带3 副露2：hunquanset
+纯全带3 副露2：chunquanset
+混一色3 副露2：*? 相同的
+小三元2 ：53 56 59
+"""
 def yi_count(yilist):
     duanyaoset={"d12","d13","d14","d15","d16","d17","d18",
                 "d22","d23","d24","d25","d26","d27","d28",
@@ -355,19 +413,22 @@ def yi_count(yilist):
                 "s23","s24","s25","s26","s27"
                 "k12", "k13", "k14", "k15", "k16", "k17", "k18",
                 "k22", "k23", "k24", "k25", "k26", "k27", "k28",
-                "k32", "k33", "k34", "k35", "k36", "k37", "k38",}
+                "k32", "k33", "k34", "k35", "k36", "k37", "k38",} # 断幺的组合
 
     chunquanset={"s12","s18","s22","s28","s32","s38"
                  "d11","d19","d21","d29","d31","d39"
-                 "k11","k19","k21","k29","k31","k39"}
+                 "k11","k19","k21","k29","k31","k39"} # 包含幺九的组合
 
     hunquanset={"s12","s18","s22","s28","s32","s38"
                 "d11","d19","d21","d29","d31","d39"
                 "k11","k19","k21","k29","k31","k39"
                 "d41","d44","d47","d50","d53","d56","d59"
-                "k41","k44","k47","k50","k53","k56","k59"}
+                "k41","k44","k47","k50","k53","k56","k59"} # 包含字牌和幺九的组合
 
 # 计算
+
+
+
 
 
 # 显示用时
