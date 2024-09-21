@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>麻将算番工具</title>
+
+</head>
+<body>
+<h1>麻将算番工具</h1>
+<form action="" method="post">
+        账号：
+    <input type="text" name="name"><br>
+        密码：
+    <input type="password" name="password"><br>
+        提交：
+    <input type="submit" name="submit">
+</form>
+<img src="/static/image/znnx.jpg" alt="" width="240" height="240">
+<br>
+{% if name == False %}
+  {% set name = '未登录' %}
+{% endif %}
+
+{% if password == False %}
+  {% set password = '' %}
+{% endif %}
+
+您的账号&nbsp&nbsp&nbsp{{name|add_weiba}}&nbsp&nbsp{{password}}
+<!-- 通过管道符判断如果未登录,则将传值限制的Undefined替换为未登录 -->
+
+<p>尚未注册？</p>
+    <a href="http://127.0.0.2:443/register">注册新用户</a>
+
+</body>
+</html>
