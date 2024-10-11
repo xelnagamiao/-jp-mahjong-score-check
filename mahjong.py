@@ -434,3 +434,4 @@ def yi_count(yilist):
 # 显示用时
 
 print("用时",time.time()-start,"s")
+# bug1 七对子和牌不给出七对牌组 bug2 国士无双和牌不计算13张以外的下一张

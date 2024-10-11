@@ -4,32 +4,103 @@
     <meta charset="UTF-8">
     <title>麻将算番工具</title>
 
+    <style>
+        #header {
+            background-color: #00af49;
+            height: 40px;
+            position:fixed;
+            top:0px;
+            left:0px;
+            right:0px;
+        }
+        #header>span {
+            float:left;
+            }
+
+        .mid-container {
+            /* 外边距上100px 左右a 下50px,auto居中，最大宽度800px，内边距20px，字体颜色#ff0095，背景颜色#cacaca，设置阴影*/
+            margin: 100px auto;
+            margin-bottom:0px; 
+            max-width: 800px;
+            padding: 30px;
+            color: #ff0095;
+            background-color: #ffffff;
+            box-shadow: 0px 0px 10px #000000;
+        }
+        .mid-container>form>div {
+            margin: 10px auto;
+        }
+        .mid-container>form>div:nth-child(1)>input{
+            width:250px;
+        }
+        .mid-container>form>div:nth-child(2)>input{
+            width:60px;
+        }
+        .mid-container>form>div:nth-child(4)>span>input{
+            width:60px;
+        }
+
+        body{
+            background:url(../static/image/background.jpg)no-repeat center center fixed;
+            background-color: #fff5fd;
+        }
+    </style>
+
+    <script src="../static/js/JavaScript.js"></script>
+
 </head>
 <body>
-<h1>麻将算番工具</h1>
-<form action="" method="post">
-        账号：
-    <input type="text" name="name"><br>
-        密码：
-    <input type="password" name="password"><br>
-        提交：
-    <input type="submit" name="submit">
-</form>
-<img src="/static/image/znnx.jpg" alt="" width="240" height="240">
-<br>
-{% if name == False %}
-  {% set name = '未登录' %}
-{% endif %}
 
-{% if password == False %}
-  {% set password = '' %}
-{% endif %}
+    <div id="header">
+        <span>麻将算番工具</span>
+        <span>麻将向听工具</span>
+        <span>麻将算番工具</span>
+    </div>
 
-您的账号&nbsp&nbsp&nbsp{{name|add_weiba}}&nbsp&nbsp{{password}}
-<!-- 通过管道符判断如果未登录,则将传值限制的Undefined替换为未登录 -->
+    <div class="mid-container">
+        <form action="/count" method="post">
+            <div>
+                <h1>麻将算番工具</h1>
+                <input type="text" class="input" placeholder="输入手牌/例如:123s456p789m东东东白白" name="hand">
+            </div>
+                
+            <div>
+                <input type="text" class="input" placeholder="副露1" name="fulu1">
+                <input type="text" class="input" placeholder="副露2" name="fulu2">
+                <input type="text" class="input" placeholder="副露3" name="fulu3">
+                <input type="text" class="input" placeholder="副露4" name="fulu4">
+            </div>
+            
+            <div>
+                <label><span>自摸<input type="checkbox" class="input" name="wayToHepai" value="wayToHepaiZi"></span></label>
+                <label><span>立直<input type="checkbox" class="input" name="wayToHepai" value="wayToHepaiLi"></span></label>
+                <label><span>荣和<input type="checkbox" class="input" name="wayToHepai" value="wayToHepaiRo"></span></label>
+                <span>一发<input type="radio" class="input" name="wayToHepai" value="wayToHepaiYi"></span>
+                <span>河底<input type="radio" class="input" name="wayToHepai" value="wayToHepaiHe"></span>
+                <span>海底<input type="radio" class="input" name="wayToHepai" value="wayToHepaiHai"></span>
+                <span>岭上<input type="radio" class="input" name="wayToHepai" value="wayToHepaiLin"></span>
+                
+            </div>
 
-<p>尚未注册？</p>
-    <a href="http://127.0.0.2:443/register">注册新用户</a>
+            <div>
+                <span>宝牌数量<input type="text" class="input" name="doraNum"></span>
+                <span>里宝牌数量<input type="text" class="input" name="deepDoraNum"></span>
+                <span><button type="button" class="btn btn-primary">清空</button></span>
+                <span><button type="submit" class="btn btn-primary">计算</button></span>
+            </div>
+        </form>
+    </div>
 
+    <div class="mid-container">
+        规则
+        <br>
+        1.m=万子,p=筒子,s=索子，东南西北白发中=东南西北白发中，0s，0p，0m=红宝牌
+        <br>
+        2.如有副露，填入副露1，副露2，副露3，副露4，如无则留空
+        <br>
+        3.手牌的最后一张牌视为荣和或自摸/杠开/抢杠牌
+        <br>
+        4.计算结果出错或网页出现问题联系q1448826180
+    </div>
 </body>
 </html>

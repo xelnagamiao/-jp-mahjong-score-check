@@ -1,1 +1,1 @@
-alert("我是JavaScript中执行的！");
+alert("使用static/js/JavaScript.js");
