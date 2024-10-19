@@ -7,6 +7,7 @@ from flask_wtf import FlaskForm # 引入flask_web表单库,flask表单
 import secrets # 使用标准库生成session秘钥
 from flask_sqlalchemy import SQLAlchemy # 引入flask sql包
 import pymysql # python/sql通信包
+import mahjong # 调下处理牌的主程序
 
 # 创建app变量 传参flask对象 __name__ = __main__  使用__name__参数 使flask类所调用的库的根目录确定为app.py本文件所在的目录
 app = Flask(__name__)
@@ -28,6 +29,9 @@ class Mjobject():
         way_to_hepai = []
         dora_num = ""
         deep_dora_num = ""
+        position_select = ""
+        public_position_select = ""
+
 
 @app.route("/",methods=["GET","POST","PUT"])
 def index():
@@ -36,9 +40,7 @@ def index():
 
 @app.route("/count",methods=["POST"])
 def get_count():
-
     Mahjong_hand = Mjobject()
-
     Mahjong_hand.hand = request.form.get('hand')
     Mahjong_hand.inputMPdata1 = request.form.get('fulu1')
     Mahjong_hand.inputMPdata2 = request.form.get('fulu2')
@@ -47,11 +49,23 @@ def get_count():
     Mahjong_hand.way_to_hepai = request.form.getlist('wayToHepai')
     Mahjong_hand.dora_num = request.form.get('doraNum')
     Mahjong_hand.deep_dora_num = request.form.get('deepDoraNum')
-    print(Mahjong_hand.way_to_hepai)
+    Mahjong_hand.position_select = request.form.get("positionSelect")
+    Mahjong_hand.public_position_select = request.form.get("publicPositionSelect")
+    print("收到信息：")
+    print("手牌：",Mahjong_hand.hand)
+    print("副露1：",Mahjong_hand.inputMPdata1)
+    print("副露2：",Mahjong_hand.inputMPdata2)
+    print("副露3：",Mahjong_hand.inputMPdata3)
+    print("副露4：",Mahjong_hand.inputMPdata4)
+    print("和牌手段",Mahjong_hand.way_to_hepai)
+    print("宝牌数：",Mahjong_hand.dora_num)
+    print("里宝牌数：",Mahjong_hand.deep_dora_num)
+    print("自风：",Mahjong_hand.position_select)
+    print("场风：",Mahjong_hand.public_position_select)
 
-    return render_template("index.html")
+    Mj_count = "123s"
+    print("返回信息:",Mj_count)
+    return render_template("index.html",Mj_count=Mj_count)
 
 if __name__ == "__main__" :
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'])
-
-

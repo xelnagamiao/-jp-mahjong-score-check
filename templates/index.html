@@ -47,6 +47,7 @@
     </style>
 
     <script src="../static/js/JavaScript.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
 </head>
 <body>
@@ -74,17 +75,38 @@
             <div>
                 <label><span>自摸<input type="checkbox" class="input" name="wayToHepai" value="wayToHepaiZi"></span></label>
                 <label><span>立直<input type="checkbox" class="input" name="wayToHepai" value="wayToHepaiLi"></span></label>
+                <label><span>双立直<input type="checkbox" class="input" name="wayToHepai" value="wayToHepaiDoubleLi"></span></label>
                 <label><span>荣和<input type="checkbox" class="input" name="wayToHepai" value="wayToHepaiRo"></span></label>
-                <span>一发<input type="radio" class="input" name="wayToHepai" value="wayToHepaiYi"></span>
-                <span>河底<input type="radio" class="input" name="wayToHepai" value="wayToHepaiHe"></span>
-                <span>海底<input type="radio" class="input" name="wayToHepai" value="wayToHepaiHai"></span>
-                <span>岭上<input type="radio" class="input" name="wayToHepai" value="wayToHepaiLin"></span>
+                <label><span>一发<input type="radio" class="input" name="wayToHepai" value="wayToHepaiYi"></span></label>
+                <label><span>河底<input type="radio" class="input" name="wayToHepai" value="wayToHepaiHe"></span></label>
+                <label><span>海底<input type="radio" class="input" name="wayToHepai" value="wayToHepaiHai"></span></label>
+                <label><span>岭上<input type="radio" class="input" name="wayToHepai" value="wayToHepaiLin"></span></label>
+                <label><span>抢杠<input type="radio" class="input" name="wayToHepai" value="wayToHepaiQG"></span></label>
+                <label><span>无<input type="radio" class="input" name="wayToHepai"></span></label>
                 
             </div>
 
             <div>
                 <span>宝牌数量<input type="text" class="input" name="doraNum"></span>
                 <span>里宝牌数量<input type="text" class="input" name="deepDoraNum"></span>
+
+                <label for="positionSelect">选择自风</label>
+                <select id="positionSelect" name="positionSelect">
+                <option value="positionOther">闲家</option>
+                <option value="positionDong">东(自亲)</option>
+                <option value="positionNan">南</option>
+                <option value="positionXi">西</option>
+                <option value="positionBei">北</option>
+
+                </select>
+                <label for="publicPositionSelect">选择场风</label>
+                <select id="publicPositionSelect" name="publicPositionSelect">
+                <option value="publicPositionDong">东</option>
+                <option value="publicPositionNan">南</option>
+                <option value="publicPositionXi">西</option>
+                <option value="publicPositionBei">北</option>
+                </select>
+
                 <span><button type="button" class="btn btn-primary">清空</button></span>
                 <span><button type="submit" class="btn btn-primary">计算</button></span>
             </div>
@@ -92,6 +114,11 @@
     </div>
 
     <div class="mid-container">
+
+        <div id="content">
+            <p>现有段落。</p>
+        </div>
+
         规则
         <br>
         1.m=万子,p=筒子,s=索子，东南西北白发中=东南西北白发中，0s，0p，0m=红宝牌
@@ -102,5 +129,50 @@
         <br>
         4.计算结果出错或网页出现问题联系q1448826180
     </div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    <div id="for-get-mj-count" style="display: none;">{{ Mj_count }}</div>
+    <script>
+        $(document).ready(function() {
+            // 获取id #for-get-mj-countdiv 中的 Mj_count 值
+            var mjCount = $('#for-get-mj-count').text();
+            console.log('计算结果返回:', mjCount);
+
+            // 你可以在这里执行其他操作，比如更新页面内容
+            $('#mj-count').text('当前计数: ' + mjCount);
+        });
+    </script>
+
+    <script>
+        // 创建一个新的段落元素
+        const newParagraph = document.createElement('p');
+        newParagraph.textContent = '这是一个新段落。';
+
+        // 获取目标元素
+        const targetElement = document.getElementById('content');
+
+        // 获取现有的第一个子节点
+        const existingChild = targetElement.firstChild;
+
+        // 在现有子节点之前插入新段落
+        targetElement.insertBefore(newParagraph, existingChild);
+    </script>
+
 </body>
 </html>

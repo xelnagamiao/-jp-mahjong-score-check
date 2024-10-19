@@ -1,15 +1,5 @@
 import time
 start=time.time()
-"""
-使用majongdata函数输入主牌组以及副露牌组↓
-使用duizicheck、kezicheck函数将副露牌组可组成的牌组合并到主牌组中↓
-主牌组通过duizicheck 遍历出各种对子可能和无对子的可能↓
-主牌组遍历后的列表进入主程序通过duizicheck以及kezicheck进行判断，直到可组成的牌组为0↓
-获得包含主牌组组成的牌组以及副露牌组的集合↓
-通过组合计算符数↓
-通过组合计算番数↓
-对比总得分，输出结果**
-"""
 def majongdata(data):
     # 建立字牌匹配集
     savewordclass={"东", "南", "西", "北","发","白","中"}
@@ -23,16 +13,16 @@ def majongdata(data):
     for i in data:
         # 数字进入savenumber暂存字符串 字牌进入saveword暂存字符串
         if i.isdigit():
-            savenumber+=i
+            savenumber += i
         elif i in savewordclass:
-            saveword+=i
+            saveword += i
         # 当遇到牌组标签s m p 时,将暂存的数据放入对应的标签集中
         elif i == "s":
             saves += savenumber
-            savenumber= ""
+            savenumber = ""
         elif i == "m":
             savem += savenumber
-            savenumber= ""
+            savenumber = ""
         elif i == "p":
             savep += savenumber
             savenumber = ""
@@ -44,28 +34,32 @@ def majongdata(data):
     mjsave=Paizu()
     # 将四个集合中的数据存储于牌组mjsave中
     for i in saves:
-        mjsave.append(Pai(int(i)+10))
+        mjsave.append(int(i)+10)
     for i in savem:
-        mjsave.append(Pai(int(i)+20))
+        mjsave.append(int(i)+20)
     for i in savep:
-        mjsave.append(Pai(int(i)+30))
+        mjsave.append(int(i)+30)
     for char in saveword:
         match char:
             case "东":
-                mjsave.append(Pai(41))
+                mjsave.append(41)
             case "南":
-                mjsave.append(Pai(44))
+                mjsave.append(44)
             case "西":
-                mjsave.append(Pai(47))
+                mjsave.append(47)
             case "北":
-                mjsave.append(Pai(50))
+                mjsave.append(50)
             case "白":
-                mjsave.append(Pai(53))
+                mjsave.append(53)
             case "发":
-                mjsave.append(Pai(56))
+                mjsave.append(56)
             case "中":
-                mjsave.append(Pai(59))
-    return mjsave # 返回牌组mjsave
+                mjsave.append(59)
+    mjsave = sorted(mjsave)
+    mjsavelist = Paizu()
+    for i in mjsave:
+        mjsavelist.append(Pai(i))
+    return mjsavelist # 返回牌组mjsavelist
 class Pai(int):
 
     def __init__(self, value):
@@ -98,6 +92,10 @@ class Paizu(list):
         self.duizicheck = False # 代表是否还可以产生对子
         self.combinations = [] # 存储牌组中已经成型的组合 其中d代表对 k代表刻 s代表顺 例如 d12则代表在2索位置有一个对子
         self.combinations_MP = [] # 存储牌组中副露的组合
+        self.duizicheck_ = False # 出现了产生多个对子的七对检测进入主牌组遍历，造成出现4个对子2个顺子的结果的bug,
+        # 该数值为True则代表该牌组包含2个以上的对子，不再参与主牌组遍历的过程
+        self.combinations_count = [] # 在计分环节存储牌型番
+        self.point_count = 0 # 在计分环节存储番数
     def inherit(self,paizulist): # inherit方法用以在牌组进行多次check对牌组进行归纳的过程中继承先前牌组的属性
         self.roundnr = paizulist.roundnr # 继承向听数
         self.duizi = paizulist.duizi # 继承对子数
@@ -105,6 +103,8 @@ class Paizu(list):
         self.kezi = paizulist.kezi # 继承刻子数
         self.combinations.extend(paizulist.combinations) # 继承牌组
         self.combinations_MP.extend(paizulist.combinations_MP) # 继承副露牌组
+        self.duizicheck_ = paizulist.duizicheck_
+
     def check(self): # paizu中的check方法用以重置pai的属性
         nrlist = [item.intnr for item in self] # 生成一个数字列表供后续比对
         for i in self:
@@ -128,6 +128,18 @@ class Paizu(list):
                 self.kezicheck = True
             if i.partner_group >= 1:
                 self.dazicheck = True
+class Mjobject():
+    def __init__(self):
+        hand = ""
+        inputMPdata1 = ""
+        inputMPdata2 = ""
+        inputMPdata3 = ""
+        inputMPdata4 = ""
+        way_to_hepai = []
+        dora_num = ""
+        deep_dora_num = ""
+        position_select = ""
+        public_position_select = ""
 def duizicheck(duizilist):
     outputlist = []
     while True: # 执行循环直到 break
@@ -144,7 +156,7 @@ def duizicheck(duizilist):
                     mjlist.roundnr += 2  # 向听数+2
                     mjlist.combinations.append(f"d{i}") # 添加牌组标记
                     # 判断组2 用以改变周边牌类的标记
-                    if i.samenr >=3: # 如果有三张一样的牌,可能会有产生2个对子的可能,以下循环完成全部标记
+                    if i.samenr >=2: # 如果有三张一样的牌,可能会有产生2个对子的可能,以下循环完成全部标记
                         for item in duizilist:
                             if item.intnr == i.intnr:
                                 item.sign = True
@@ -210,24 +222,6 @@ def dazicheck(dazilist):
         if signnr == 3:
             return outputlist
         outputlist.append(mjlist)
-
-# 初始化变量
-alllist = [] # 未被确定遍历完成的牌组集合
-savelist = [] #
-endlist = []
-maxroundnr = 0
-r = 0 # 循环次数
-majonglist=[] # 存储最近向听数的牌组
-
-# 引入数据
-#inputdata = majongdata("12233444456789s")
-inputdata = majongdata("23444456789s") # 引入主牌组
-inputMPdata1 = majongdata("123s") # 引入副露1
-inputMPdata2 = majongdata("") # 引入副露2
-inputMPdata3 = majongdata("") # 引入副露3
-inputMPdata4 = majongdata("") # 引入副露4
-
-# 副露处理
 def MPcheck(mplist):
     MPlist = []
     savelist = []
@@ -253,18 +247,6 @@ def MPcheck(mplist):
         for item in i:
             print("检测到副露输入中包含未成搭，刻")
             break
-MPcheck(inputMPdata1) # 处理副露1
-MPcheck(inputMPdata2) # 处理副露2
-MPcheck(inputMPdata3) # 处理副露3
-MPcheck(inputMPdata4) # 处理副露4
-
-# 对子处理
-inputdata.check()
-print("原始牌组",inputdata)
-alllist.extend(duizicheck(inputdata))
-print("以下是几种雀头可能",alllist)
-
-# 十三幺与七对子遍历
 def GScheck(yaojiulist):
     yaojiu = {11, 19, 21, 29, 31, 39, 41, 44, 47, 50, 53, 56, 59}
     mjlist = Paizu()
@@ -318,52 +300,309 @@ def QDcheck(duizilist):
         savelist = mjlist
         savelist.check()
         if signnr == 2:
+            if savelist.roundnr > 2:
+                savelist.duizicheck_ = True
             alllist.append(savelist)
             print("七对子遍历：向听数为",14-mjlist.roundnr,"包含的牌组包括",mjlist.combinations,"剩余的牌包括",mjlist)
             break
-if inputdata.roundnr == 0 : # 如果主牌组拥有14张牌 则进行十三幺和七对子型的检查
-    QDcheck(inputdata)
-    GScheck(inputdata)
+def handCheck(alllist):
+    endlist = []
+    while alllist:
+        savelist = []
+        r = 0
+        residue_paizu = 0 # 监控savelist中一共有多少牌组
+        endlist_paizu = 0
+        for i in alllist:
+            i.check() # 自检
+            if i.duizicheck_ is not True:
+                if i.kezicheck == True and i.dazicheck == True:  # 如果一个牌组又可以构成搭子又可以构成刻子
+                    savelist.extend(dazicheck(i)) # 进行搭子运算
+                    savelist.extend(kezicheck(i)) # 进行刻子运算 !如先进行刻子运算会导致 i(Pai).sign 未还原
+                    residue_paizu += 2
+                elif i.kezicheck == True and i.dazicheck == False:  # 如果一个牌可以构成刻子
+                    savelist.extend(kezicheck(i)) # 进行刻子运算
+                    residue_paizu += 1
+                elif i.dazicheck == True and i.kezicheck == False:
+                    savelist.extend(dazicheck(i)) # 进行搭子运算
+                    residue_paizu += 1
+                elif i.dazicheck == False and i.kezicheck == False:
+                    endlist.append(i)
+                    endlist_paizu += 1
+        alllist = savelist
+        savelist = []
+        r += 1
+        print(f"第{r}轮遍历剩余牌组还有", residue_paizu)
+        print("完成牌组总共", endlist_paizu)
+    return endlist
+def resultFilter(endlist):
+    maxroundnr = 0
+    mjlist = []
+    for i in endlist:
+        if i.roundnr >= maxroundnr :
+             maxroundnr = i.roundnr
+    for i in endlist:
+        if i.roundnr == maxroundnr :
+            mjlist.append(i)
+            i.roundnr = 14-i.roundnr
+    for i in mjlist:
+        print("最低向听数为",i.roundnr,"包含的牌组包括",i.combinations,"副露牌组包括",i.combinations_MP,"剩余的牌包括",i)
+    return mjlist
+def distinctMjlist(mahjonglist):
+    mjlist = []
+    all_combinations = []
+    all_combinations_list = []
+    for i in mahjonglist:
+        all_combinations = sorted(i.combinations + i.combinations_MP)
+        if all_combinations not in all_combinations_list :
+            mjlist.append(i)
+            all_combinations_list.append(all_combinations)
+            print(all_combinations)
+    return mjlist
 
-# 一般型遍历(主程序)
-while alllist:
-    residue_paizu = 0 # 监控savelist中一共有多少牌组
-    endlist_paizu = 0
-    for i in alllist:
-        i.check() # 自检
-        if i.kezicheck == True and i.dazicheck == True:  # 如果一个牌组又可以构成搭子又可以构成刻子
-            savelist.extend(kezicheck(i)) # 进行刻子运算
-            savelist.extend(dazicheck(i)) # 进行搭子运算
-            residue_paizu += 2
-        elif i.kezicheck == True and i.dazicheck == False:  # 如果一个牌可以构成刻子
-            savelist.extend(kezicheck(i)) # 进行刻子运算
-            residue_paizu += 1
-        elif i.dazicheck == True and i.kezicheck == False:
-            savelist.extend(dazicheck(i)) # 进行搭子运算
-            residue_paizu += 1
-        elif i.dazicheck == False and i.kezicheck == False:
-            endlist.append(i)
-            endlist_paizu += 1
-    alllist = savelist
-    savelist = []
-    r += 1
-    print(f"第{r}轮遍历剩余牌组还有", residue_paizu)
-    print("完成牌组总共", endlist_paizu)
+"""
+duanyaoset={"d12","d13","d14","d15","d16","d17","d18",
+            "d22","d23","d24","d25","d26","d27","d28",
+            "d32","d33","d34","d35","d36","d37","d38",
+            "s13","s14","s15","s16","s17",
+            "s23","s24","s25","s26","s27",
+            "k12", "k13", "k14", "k15", "k16", "k17", "k18",
+            "k22", "k23", "k24", "k25", "k26", "k27", "k28",
+            "k32", "k33", "k34", "k35", "k36", "k37", "k38",} # 断幺的牌组集合
+"""
 
-# 保留向听最近牌组
-for i in endlist:
-    if i.roundnr >= maxroundnr :
-         maxroundnr = i.roundnr
-for i in endlist:
-    if i.roundnr == maxroundnr :
-        majonglist.append(i)
-        i.roundnr = 14-i.roundnr
-for i in majonglist:
-    print("最低向听数为",i.roundnr,"包含的牌组包括",i.combinations,"副露牌组包括",i.combinations_MP,"剩余的牌包括",i)
+chunquanset={"s12","s18","s22","s28","s32","s38",
+            "d11","d19","d21","d29","d31","d39",
+            "k11","k19","k21","k29","k31","k39"} # 幺九的牌组集合
 
-# 计算符数
-def fu_count(fulist):
-    keziset={}
+hunquanset={"s12","s18","s22","s28","s32","s38",
+            "d11","d19","d21","d29","d31","d39",
+            "k11","k19","k21","k29","k31","k39",
+            "d41","d44","d47","d50","d53","d56","d59",
+            "k41","k44","k47","k50","k53","k56","k59"} # 字牌、幺九的牌组集合
+
+zipaiset={41,44,47,50,53,56,59} # 字牌集合
+suoziset={11,12,13,14,15,16,17,18,19} # 索子集合
+wanziset={21,22,23,24,25,26,27,28,29} # 万子集合
+tongziset={31,32,33,34,35,36,37,38,39} # 筒子集合
+yaojiuset={11,19,21,29,31,39} # 幺九集合
+duanyaoset={12,13,14,15,16,17,18,21,22,23,24,25,26,27,28,32,33,34,35,36,37,38} # 断幺集合
+
+if __name__ == "__main__" :
+    # 牌组计算阶段
+    Mj_input = Mjobject()
+    # 模拟前端传回 Mjobject 类 其中包含十项数据 ：
+    Mj_input.hand = "123123123s999s东东"
+    Mj_input.inputMPdata1 = ""
+    Mj_input.inputMPdata2 = ""
+    Mj_input.inputMPdata3 = ""
+    Mj_input.inputMPdata4 = ""
+    Mj_input.way_to_hepai = ["wayToHepaiZi","wayToHepaiLi","wayToHepaiDoubleLi","wayToHepaiRo","wayToHepaiYi","wayToHepaiHe","wayToHepaiHai","wayToHepaiLin","wayToHepaiQG"]
+    Mj_input.dora_num = "3"
+    Mj_input.deep_dora_num = "2"
+    Mj_input.position_select = "positionDong"
+    Mj_input.public_position_select = "publicPositionDong"
+
+    # 通过majongdata 处理 Mj_input.hand 和 Mj_input.inputMPdata* 数据
+    inputdata = majongdata(Mj_input.hand)
+    print("原始牌组",inputdata)
+    inputMPdata1 = majongdata(Mj_input.inputMPdata1)
+    inputMPdata2 = majongdata(Mj_input.inputMPdata2)
+    inputMPdata3 = majongdata(Mj_input.inputMPdata3)
+    inputMPdata4 = majongdata(Mj_input.inputMPdata4)
+
+    # MPcheck 将传入的副露数据合并至 inputdata.combinations_MP
+    MPcheck(inputMPdata1)  # 处理副露1
+    MPcheck(inputMPdata2)  # 处理副露2
+    MPcheck(inputMPdata3)  # 处理副露3
+    MPcheck(inputMPdata4)  # 处理副露4
+
+    # 遍历所有可能的雀头状态 存储于alllist当中
+    alllist = []
+    inputdata.check() # 牌组方法自检
+    alllist.extend(duizicheck(inputdata))
+    print("以下是几种雀头可能", alllist)
+
+    # 如果主牌组的roundnr不为0 (没有副露) 就进行七对子和国士无双的检测 也将结果存储在alllist当中
+    if inputdata.roundnr == 0:
+        QDcheck(inputdata)
+        GScheck(inputdata)
+
+    # handCheck方法将所有alllist中的牌组进行搭子和刻子的判断 如果同时满足两个条件则均进行判断 保证得出所有和牌可能性 直到alllist内不再有可以迭代的对象
+    endlist = handCheck(alllist)
+
+    # resultFilter方法遍历endlist,只保留向听数最近/和牌的牌组
+    mahjonglist = resultFilter(endlist)
+
+    # 去重 mahjonglist 中重复的牌组 牌组操作结束
+    mahjonglist = distinctMjlist(mahjonglist)
+
+    # 牌组计分阶段
+    # 通过 Mj_input.way_to_hepai 的前端传参判断全局变量 part1
+    自摸 = False
+    立直 = False
+    双立直 = False
+    荣和 = False
+    一发 = False
+    河底 = False
+    海底 = False
+    岭上 = False
+    抢杠 = False
+    for i in Mj_input.way_to_hepai:
+        match i:
+            case "wayToHepaiZi":
+                自摸 = True
+            case "wayToHepaiLi":
+                立直 = True
+            case "wayToHepaiDoubleLi":
+                双立直 = True
+            case "wayToHepaiRo":
+                荣和 = True
+            case "wayToHepaiYi":
+                一发 = True
+            case "wayToHepaiHe":
+                河底 = True
+            case "wayToHepaiHai":
+                海底 = True
+            case "wayToHepaiLin":
+                岭上 = True
+            case "wayToHepaiQG":
+                抢杠 = True
+
+    # 通过 手牌检测 判断全局变量 part2
+    清一色 = False
+    混一色 = False
+    混老头 = False
+    断幺 = False
+    print(inputdata)
+    if all(10 < element < 20 for element in inputdata):
+        清一色 = True
+    elif all(20 < element < 30 for element in inputdata):
+        清一色 = True
+    elif all(30 < element < 40 for element in inputdata):
+        清一色 = True
+    elif all(10 < element < 20 or 40 < element for element in inputdata):
+        混一色 = True
+    elif all(20 < element < 30 or 40 < element for element in inputdata):
+        混一色 = True
+    elif all(30 < element < 40 or 40 < element for element in inputdata):
+        混一色 = True
+    if all(element in yaojiuset for element in inputdata):
+        混老头 = True
+        print("混老头成立")
+    if all(element in duanyaoset for element in inputdata):
+        断幺 = True
+        print("断幺成立")
+
+    副露 = False
+    自风 = ""
+    场风 = ""
+    宝牌 = int(Mj_input.dora_num)
+    里宝牌 = int(Mj_input.deep_dora_num)
+    # 通过 传值检测 获取全局变量 part3
+    match Mj_input.position_select :
+        case "positionDong":
+            自风 = "东"
+        case "positionNan":
+            自风 = "南"
+        case "positionXi":
+            自风 = "西"
+        case "positionBei":
+            自风 = "北"
+        case "positionOther":
+            自风 = "闲家"
+    match Mj_input.public_position_select :
+        case "publicPositionDong":
+            场风 = "东"
+        case "publicPositionNan":
+            场风 = "南"
+        case "publicPositionXi":
+            场风 = "西"
+        case "publicPositionBei":
+            场风 = "北"
+    if Mj_input.inputMPdata1 + Mj_input.inputMPdata2 + Mj_input.inputMPdata3 + Mj_input.inputMPdata4 == True:
+        副露 = True
+
+
+    # 检测牌组
+    for i in mahjonglist:
+        all_combinations = sorted(i.combinations + i.combinations_MP)
+        # 检测 断幺 （不成立）→ 混全 → 纯全
+        if 断幺 == False :
+            if all(element in hunquanset for element in all_combinations):
+                if all(element in chunquanset for element in all_combinations):
+                    i.combinations_count.append("纯全")
+                else:
+                    i.combinations_count.append("混全")
+        # 检测刻子 对子 顺子的数量 以及 平和 对对 七对
+        str_combinations = ""
+        for item in all_combinations:
+            match item:
+                case "k53":
+                    item.combinations_count.append("役牌白")
+                case "k56":
+                    item.combinations_count.append("役牌发")
+                case "k59":
+                    item.combinations_count.append("役牌中")
+                case "k41":
+                    if 自风 == "东" :
+                        item.combinations_count.append("自风东")
+                    if 场风 == "东" :
+                        item.combinations_count.append("场风东")
+                case "k44":
+                    if 自风 == "南":
+                        item.combinations_count.append("自风南")
+                    if 场风 == "南":
+                        item.combinations_count.append("场风南")
+                case "k47":
+                    if 自风 == "西":
+                        item.combinations_count.append("自风西")
+                    if 场风 == "西":
+                        item.combinations_count.append("场风西")
+                case "k50":
+                    if 自风 == "北":
+                        item.combinations_count.append("自风北")
+                    if 场风 == "北":
+                        item.combinations_count.append("场风北")
+            str_combinations += item # 合并all_combinations 中的所有字符串
+        # print(str_combinations)
+        kezinr = 0
+        dazinr = 0
+        duizinr = 0
+        for item in str_combinations:
+            match item:
+                case "d":
+                    duizinr += 1
+                case "k":
+                    kezinr += 1
+                case "s":
+                    dazinr += 1
+        # print(f"对子数量为{duizinr},搭子数量为{dazinr},刻子数量为{kezinr}")
+        if dazinr == 4:
+            i.combinations_count.append("平和")
+        elif kezinr == 4:
+            i.combinations_count.append("对对和")
+        elif duizinr == 7:
+            i.combinations_count.append("七对子")
+        # 检测是否有一气
+        if all(element in all_combinations for element in ["s12","s15","s18"]):
+            print("一气成立")
+            i.combinations_count.append("一气贯通")
+        elif all(element in all_combinations for element in ["s22","s25","s28"]):
+            print("一气成立")
+            i.combinations_count.append("一气贯通")
+        elif all(element in all_combinations for element in ["s22", "s25", "s28"]):
+            print("一气成立")
+            i.combinations_count.append("一气贯通")
+        # 打印牌组及其番数
+        print(all_combinations,i.combinations_count)
+
+
+
+# 一杯口
+# 三色同刻 三杠子 三暗刻 小三元
+# 三色同顺 3.二杯口
+
+
 """
 基础 = 20
 
@@ -385,53 +624,3 @@ def fu_count(fulist):
 平和自20
 副露配合30
 """
-# 计算役数
-"""
-额外番数（不需要牌组判断的）：立直1 双立直2 一发1 自摸1 役牌1 岭上1 海底1 河底1 抢杠1 #宝牌 #红宝牌 #拔北
-形番：
-
-平和1：没有k的
-断幺1：全都存在duanyaoset中的
-一杯口1：相同的s**
-二杯口2：两个一杯口
-七对子2：通过QDcheck
-对对和2：全都存在keziset的
-三色同顺2 副露不为空1：存在s1* s2* s3* 的
-三色同刻2：存在k1* k2* k3* 的
-三暗刻3：主牌组三个刻子 的
-三杠子2：g*3
-混全带3 副露2：hunquanset
-纯全带3 副露2：chunquanset
-混一色3 副露2：*? 相同的
-小三元2 ：53 56 59
-"""
-def yi_count(yilist):
-    duanyaoset={"d12","d13","d14","d15","d16","d17","d18",
-                "d22","d23","d24","d25","d26","d27","d28",
-                "d32","d33","d34","d35","d36","d37","d38",
-                "s13","s14","s15","s16","s17",
-                "s23","s24","s25","s26","s27"
-                "k12", "k13", "k14", "k15", "k16", "k17", "k18",
-                "k22", "k23", "k24", "k25", "k26", "k27", "k28",
-                "k32", "k33", "k34", "k35", "k36", "k37", "k38",} # 断幺的组合
-
-    chunquanset={"s12","s18","s22","s28","s32","s38"
-                 "d11","d19","d21","d29","d31","d39"
-                 "k11","k19","k21","k29","k31","k39"} # 包含幺九的组合
-
-    hunquanset={"s12","s18","s22","s28","s32","s38"
-                "d11","d19","d21","d29","d31","d39"
-                "k11","k19","k21","k29","k31","k39"
-                "d41","d44","d47","d50","d53","d56","d59"
-                "k41","k44","k47","k50","k53","k56","k59"} # 包含字牌和幺九的组合
-
-# 计算
-
-
-
-
-
-# 显示用时
-
-print("用时",time.time()-start,"s")
-# bug1 七对子和牌不给出七对牌组 bug2 国士无双和牌不计算13张以外的下一张
