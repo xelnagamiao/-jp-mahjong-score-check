@@ -7,7 +7,7 @@ from flask_wtf import FlaskForm # 引入flask_web表单库,flask表单
 import secrets # 使用标准库生成session秘钥
 from flask_sqlalchemy import SQLAlchemy # 引入flask sql包
 import pymysql # python/sql通信包
-import mahjong # 调下处理牌的主程序
+from mahjong import mahjong_count # 调下处理牌的主程序
 
 # 创建app变量 传参flask对象 __name__ = __main__  使用__name__参数 使flask类所调用的库的根目录确定为app.py本文件所在的目录
 app = Flask(__name__)
@@ -63,9 +63,11 @@ def get_count():
     print("自风：",Mahjong_hand.position_select)
     print("场风：",Mahjong_hand.public_position_select)
 
-    Mj_count = "123s"
+    output = mahjong_count(Mahjong_hand)
+
+    Mj_count = "通信中"
     print("返回信息:",Mj_count)
-    return render_template("index.html",Mj_count=Mj_count)
+    return render_template("index.html",Mj_count = Mj_count,output = output)
 
 if __name__ == "__main__" :
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'])

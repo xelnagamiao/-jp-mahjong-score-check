@@ -26,6 +26,10 @@
             color: #ff0095;
             background-color: #ffffff;
             box-shadow: 0px 0px 10px #000000;
+            border: 1px solid red; /* 临时添加，便于调试 */
+        }
+        .mid-container-shortTopMargin {
+            margin: 50px auto;
         }
         .mid-container>form>div {
             margin: 10px auto;
@@ -113,21 +117,30 @@
         </form>
     </div>
 
-    <div class="mid-container">
-
-        <div id="content">
-            <p>现有段落。</p>
+    <div class="mid-container mid-container-shortTopMargin">
+        <div id="result">
+            {{output|safe}}
         </div>
 
-        规则
-        <br>
-        1.m=万子,p=筒子,s=索子，东南西北白发中=东南西北白发中，0s，0p，0m=红宝牌
-        <br>
-        2.如有副露，填入副露1，副露2，副露3，副露4，如无则留空
-        <br>
-        3.手牌的最后一张牌视为荣和或自摸/杠开/抢杠牌
-        <br>
-        4.计算结果出错或网页出现问题联系q1448826180
+    </div>
+
+    <div class="mid-container mid-container-shortTopMargin">
+        <div id="content">
+            规则
+            <br>
+            1.m=万子,p=筒子,s=索子，东南西北白发中=东南西北白发中，0s，0p，0m=红宝牌
+            <br>
+            2.如有副露，填入副露1，副露2，副露3，副露4，如无则留空
+            <br>
+            3.杠牌的处理(例如3s杠):明杠请在副露中填入3333s,暗杠请在副露中填入33333s
+            <br>
+            4.手牌的最后一张牌视为荣和/自摸以及其他方式的和牌张
+            <br>
+            5.计算结果出错或网页出现问题联系q1448826180
+            <br>
+            6.本工具的所有权归于立研社所有，群号432372422
+
+        </div>
     </div>
 
 
@@ -151,27 +164,9 @@
     <script>
         $(document).ready(function() {
             // 获取id #for-get-mj-countdiv 中的 Mj_count 值
-            var mjCount = $('#for-get-mj-count').text();
-            console.log('计算结果返回:', mjCount);
-
-            // 你可以在这里执行其他操作，比如更新页面内容
-            $('#mj-count').text('当前计数: ' + mjCount);
+            let mjCount = $('#for-get-mj-count').text();
+            console.log('测试连接', mjCount);
         });
-    </script>
-
-    <script>
-        // 创建一个新的段落元素
-        const newParagraph = document.createElement('p');
-        newParagraph.textContent = '这是一个新段落。';
-
-        // 获取目标元素
-        const targetElement = document.getElementById('content');
-
-        // 获取现有的第一个子节点
-        const existingChild = targetElement.firstChild;
-
-        // 在现有子节点之前插入新段落
-        targetElement.insertBefore(newParagraph, existingChild);
     </script>
 
 </body>
