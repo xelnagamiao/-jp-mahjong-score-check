@@ -30,6 +30,8 @@ class Paizu(list):
         self.duizi = 0 # 代表对子数
         self.dazi = 0 # 代表搭子数
         self.kezi = 0 # 代表刻子数
+        self.endhand = 0 # 存储最后一张手牌（自摸/荣和张）
+        self.red_dora = 0 # 存储赤宝牌
         self.dazicheck = False # 代表是否还可以产生搭子
         self.kezicheck = False # 代表是否还可以产生刻子
         self.duizicheck = False # 代表是否还可以产生对子
@@ -37,11 +39,12 @@ class Paizu(list):
         self.combinations_MP = [] # 存储牌组中副露的组合
         self.duizicheck_ = False # 出现了产生多个对子的七对检测进入主牌组遍历，造成出现4个对子2个顺子的结果的bug,
         # 该数值为True则代表该牌组包含2个以上的对子，不再参与主牌组遍历的过程
-        self.combinations_count = [] # 在计分环节存储牌型番
-        self.multiple_count = 0 # 在计分环节存储番数
-        self.endhand = 0 # 存储最后一张手牌（自摸/荣和张）
-        self.red_dora = 0 # 存储赤宝牌
-        self.m = 20 # 符数
+
+        self.multiple_count = 0 # 1.在计分环节存储番数
+        self.combinations_count = [] # 1.在计分环节存储牌型番
+        self.m = 20 # 2.在计符环节存储符数
+        self.m_combinations = [] # 2.在计符环节存储符数组合
+        self.point_count = 0 # 3.存储计分
     def inherit(self,paizulist): # inherit方法用以在牌组进行多次check对牌组进行归纳的过程中继承先前牌组的属性
         self.roundnr = paizulist.roundnr # 继承向听数
         self.duizi = paizulist.duizi # 继承对子数
@@ -203,6 +206,7 @@ def majongdata(data):
                 endsave = 59
     mjsavelist.endhand = endsave
     mjsavelist.red_dora = red_dora
+    # 标记红宝牌
     if 15 in red_dora_number:
         for item in mjsavelist:
             if item == 15:
@@ -828,7 +832,7 @@ def m_count(mahjonglist,Mj_input):
     duiziyipaiset={"d53", "d56", "d59"} # 三元牌 2符
     self_positionset=set() # 自风牌 2符
     public_positionset=set() # 场风牌 2符
-    match Mj_input.position_select :
+    match Mj_input.position_select : # 为后续代码简洁暂时使用单元素集合
         case "positionDong":
             self_positionset.add("d41")
         case "positionNan":
@@ -848,143 +852,239 @@ def m_count(mahjonglist,Mj_input):
             public_positionset.add("d50")
     for i in mahjonglist:
         i.m = 20 # 初始符20
+        i.m_combinations.append("基础符20")
         if "wayToHepaiZi" in Mj_input.way_to_hepai:
             i.m += 2 # 自摸符2
-        if f"k{i.endhand}" in i.combinations + i.combinations_MP:
+            i.m_combinations.append("自摸+2符")
+        if f"k{i.endhand}" in i.combinations + i.combinations_MP: # 如果自摸牌构成刻子则跳过
             pass
         else:
             i.m += 2 # 如果自摸牌不构成刻子(即并非对碰 坎张 边张 单骑 +2符 )
+            i.m_combinations.append("坎张、边张、单骑+2符")
         if "七对子" in i.combinations_count:
             i.m = 25 # 七对子25符
+            i.m_combinations = ["七对子25符"]
         elif "平和" in i.combinations_count and "自摸" in i.combinations_count:
             i.m = 20 # 平和20符
+            i.m_combinations = ["平和20符"]
         else:
             str_combinnations = ""
-            for item in i.combinations+i.combinations_MP:
+            s = 0
+            for item in i.combinations + i.combinations_MP:
                 str_combinnations += item
                 s = str_combinnations.count("s")
             positionset = self_positionset | public_positionset
             if s == 4 and i.combinations_MP and any(element in i.combinations + i.combinations_MP for element in positionset) == False: # 有副露的平和型
                 i.m = 30
+                i.m_combinations = ["有副露的平和型30符"]
             else:
                 for item in i.combinations:
                     if item in duiziyipaiset:
                         i.m += 2
+                        i.m_combinations.append("役牌对+2符")
                     if item in self_positionset:
                         i.m += 2
+                        i.m_combinations.append("自风对+2符")
                     if item in public_positionset:
                         i.m += 2
+                        i.m_combinations.append("场风对+2符")
                     if item in keziset:
                         i.m += 4
+                        i.m_combinations.append("数牌暗刻+4符")
                     if item in yaojiukeziset:
                         i.m += 8
+                        i.m_combinations.append("幺九/字牌暗刻+8符")
                     if item in gangset:
                         i.m += 16
+                        i.m_combinations.append("数牌暗杠+16符")
                     if item in yaojiugangset:
                         i.m += 32
+                        i.m_combinations.append("幺九/字牌暗杠+32符")
                 for item in i.combinations_MP:
                     if item in keziset:
                         i.m += 2
+                        i.m_combinations.append("数牌明刻+2符")
                     if item in yaojiukeziset:
                         i.m += 4
+                        i.m_combinations.append("幺九/字牌明刻+4符")
                     if item in gangset:
                         i.m += 8
+                        i.m_combinations.append("数牌明杠+8符")
                     if item in yaojiugangset:
                         i.m += 16
-                if i.combinations_MP:
-                    pass
+                        i.m_combinations.append("幺九/字牌明杠+16符")
+                if "wayToHepaiRo" in Mj_input.way_to_hepai and not any([Mj_input.inputMPdata1, Mj_input.inputMPdata2, Mj_input.inputMPdata3, Mj_input.inputMPdata4]):
+                    i.m += 10 # 门清荣和 10符
+                    i.m_combinations.append("门清荣和+10符")
+# point_count 计算得点
+def point_count(mahjonglist,Mj_input):
+    # 切上计符
+    for i in mahjonglist:
+        if i.m % 10 != 0:
+            if i.m != 25:
+                m_point = (10 - i.m % 10) + i.m
+        multple_count = (i.multiple_count + i.red_dora + (int(Mj_input.dora_num) if Mj_input.dora_num.isdigit() else 0)
+                         + (int(Mj_input.deep_dora_num) if Mj_input.deep_dora_num.isdigit() else 0))
+        if i.m * 2 ** (multple_count + 2) * 4 > 8000:
+            # 得分超过满贯
+            if multple_count >= 4:
+                base_point = 2000
+                point_sign = "满贯"
+                if multple_count >= 6:
+                    base_point = 3000
+                    point_sign = "跳满"
+                    if multple_count >= 8:
+                        base_point = 4000
+                        point_sign = "倍满"
+                        if multple_count >= 11:
+                            base_point = 6000
+                            point_sign = "三倍满"
+                            if multple_count >= 13:
+                                base_point = 8000
+                                point_sign = "累积役满"
+            if "wayToHepaiZi" in Mj_input.way_to_hepai:
+                # 亲家自摸
+                if Mj_input.position_select == "positionDong":
+                    i.point_count = f"亲家{point_sign}——自摸{base_point * 2}all"
+                # 亲家荣和
                 else:
-                    if "wayToHepaiZi" in Mj_input.way_to_hepai:
-                        i.m += 10 # 门清荣和 10符
-# 合并计番、计符结果,输出运算结果
+                    i.point_count = f"亲家{point_sign}——荣和{base_point * 6}点"
+            else:
+                # 闲家自摸
+                if Mj_input.position_select == "positionDong":
+                    hand_point_1 = base_point * 2
+                    hand_point_2 = base_point * 1
+                    i.point_count = f"闲家{point_sign}——自摸{hand_point_1}-{hand_point_2}"
+                # 闲家荣和
+                else:
+                    i.point_count = f"闲家{point_sign}——荣和{base_point * 4}点"
+        else:
+            # 得分未超过满贯
+            if "wayToHepaiZi" in Mj_input.way_to_hepai:
+                # 亲家自摸
+                if Mj_input.position_select == "positionDong":
+                    hand_point = i.m * 2 ** (multple_count + 2) * 2
+                    if hand_point % 100 != 0:
+                        hand_point += 100 - hand_point % 100
+                    i.point_count = f"亲家自摸{base_point}all"
+                # 闲家自摸
+                else:
+                    hand_point_1 = m_point * 2 ** (multple_count + 2) * 2
+                    if hand_point_1 % 100 != 0:
+                        hand_point_1 += 100 - hand_point_1 % 100
+                    hand_point_2 = m_point * 2 ** (multple_count + 2) * 1
+                    if hand_point_2 % 100 != 0:
+                        hand_point_2 += 100 - hand_point_2 % 100
+                    i.point_count = f"闲家自摸{hand_point_1}-{hand_point_2}"
+            else:
+                # 亲家荣和
+                if Mj_input.position_select == "positionDong":
+                    i.point_count = "123"
+                    hand_point = m_point * 2 ** (multple_count + 2) * 6
+                    if hand_point % 100 != 0:
+                        hand_point += 100 - hand_point % 100
+                    i.point_count = f"亲家荣和{hand_point}"
+                # 闲家荣和
+                else:
+                    hand_point = m_point * 2 ** (multple_count + 2) * 4
+                    if hand_point % 100 != 0:
+                        hand_point += 100 - hand_point % 100
+                    i.point_count = f"闲家荣和{hand_point}"
+
+# 合并计番、计符、计分结果,输出运算结果
 def multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata2,inputMPdata3,inputMPdata4):
     output = ""
-    # 输出手牌及符数描述
-    outputlist = [inputdata,inputMPdata1,inputMPdata2,inputMPdata3,inputMPdata4]
-    for hand_list in outputlist:
-        for i in hand_list:
-            match i:
-                case 11:
-                    output += "<img src ='./static/image/image_mj/1s.gif'>"
-                case 12:
-                    output += "<img src ='./static/image/image_mj/2s.gif'>"
-                case 13:
-                    output += "<img src ='./static/image/image_mj/3s.gif'>"
-                case 14:
-                    output += "<img src ='./static/image/image_mj/4s.gif'>"
-                case 15:
-                    if i.red == True:
-                        output += "<img src ='./static/image/image_mj/0s.gif'>"
-                    else:
-                        output += "<img src ='./static/image/image_mj/5s.gif'>"
-                case 16:
-                    output += "<img src ='./static/image/image_mj/6s.gif'>"
-                case 17:
-                    output += "<img src ='./static/image/image_mj/7s.gif'>"
-                case 18:
-                    output += "<img src ='./static/image/image_mj/8s.gif'>"
-                case 19:
-                    output += "<img src ='./static/image/image_mj/9s.gif'>"
-                case 21:
-                    output += "<img src ='./static/image/image_mj/1m.gif'>"
-                case 22:
-                    output += "<img src ='./static/image/image_mj/2m.gif'>"
-                case 23:
-                    output += "<img src ='./static/image/image_mj/3m.gif'>"
-                case 24:
-                    output += "<img src ='./static/image/image_mj/4m.gif'>"
-                case 25:
-                    if i.red == True:
-                        output += "<img src ='./static/image/image_mj/0m.gif'>"
-                    else:
-                        output += "<img src ='./static/image/image_mj/5m.gif'>"
-                case 26:
-                    output += "<img src ='./static/image/image_mj/6m.gif'>"
-                case 27:
-                    output += "<img src ='./static/image/image_mj/7m.gif'>"
-                case 28:
-                    output += "<img src ='./static/image/image_mj/8m.gif'>"
-                case 29:
-                    output += "<img src ='./static/image/image_mj/9m.gif'>"
-                case 31:
-                    output += "<img src ='./static/image/image_mj/1p.gif'>"
-                case 32:
-                    output += "<img src ='./static/image/image_mj/2p.gif'>"
-                case 33:
-                    output += "<img src ='./static/image/image_mj/3p.gif'>"
-                case 34:
-                    output += "<img src ='./static/image/image_mj/4p.gif'>"
-                case 35:
-                    if i.red == True:
-                        output += "<img src ='./static/image/image_mj/0p.gif'>"
-                    else:
-                        output += "<img src ='./static/image/image_mj/5p.gif'>"
-                case 36:
-                    output += "<img src ='./static/image/image_mj/6p.gif'>"
-                case 37:
-                    output += "<img src ='./static/image/image_mj/7p.gif'>"
-                case 38:
-                    output += "<img src ='./static/image/image_mj/8p.gif'>"
-                case 39:
-                    output += "<img src ='./static/image/image_mj/9p.gif'>"
-                case 41:
-                    output += "<img src ='./static/image/image_mj/1z.gif'>"
-                case 44:
-                    output += "<img src ='./static/image/image_mj/2z.gif'>"
-                case 47:
-                    output += "<img src ='./static/image/image_mj/3z.gif'>"
-                case 50:
-                    output += "<img src ='./static/image/image_mj/4z.gif'>"
-                case 53:
-                    output += "<img src ='./static/image/image_mj/5z.gif'>"
-                case 56:
-                    output += "<img src ='./static/image/image_mj/6z.gif'>"
-                case 59:
-                    output += "<img src ='./static/image/image_mj/7z.gif'>"
-            output += "\t"
-
-    # 按习惯顺序输出番数描述
     for i in mahjonglist:
+        # 1.输出手牌图片组
+        outputlist = [inputdata,inputMPdata1,inputMPdata2,inputMPdata3,inputMPdata4]
+        for hand_list in outputlist:
+            for item in hand_list:
+                match item:
+                    case 11:
+                        output += "<img src ='./static/image/image_mj/1s.gif'>"
+                    case 12:
+                        output += "<img src ='./static/image/image_mj/2s.gif'>"
+                    case 13:
+                        output += "<img src ='./static/image/image_mj/3s.gif'>"
+                    case 14:
+                        output += "<img src ='./static/image/image_mj/4s.gif'>"
+                    case 15:
+                        if item.red == True:
+                            output += "<img src ='./static/image/image_mj/0s.gif'>"
+                        else:
+                            output += "<img src ='./static/image/image_mj/5s.gif'>"
+                    case 16:
+                        output += "<img src ='./static/image/image_mj/6s.gif'>"
+                    case 17:
+                        output += "<img src ='./static/image/image_mj/7s.gif'>"
+                    case 18:
+                        output += "<img src ='./static/image/image_mj/8s.gif'>"
+                    case 19:
+                        output += "<img src ='./static/image/image_mj/9s.gif'>"
+                    case 21:
+                        output += "<img src ='./static/image/image_mj/1m.gif'>"
+                    case 22:
+                        output += "<img src ='./static/image/image_mj/2m.gif'>"
+                    case 23:
+                        output += "<img src ='./static/image/image_mj/3m.gif'>"
+                    case 24:
+                        output += "<img src ='./static/image/image_mj/4m.gif'>"
+                    case 25:
+                        if item.red == True:
+                            output += "<img src ='./static/image/image_mj/0m.gif'>"
+                        else:
+                            output += "<img src ='./static/image/image_mj/5m.gif'>"
+                    case 26:
+                        output += "<img src ='./static/image/image_mj/6m.gif'>"
+                    case 27:
+                        output += "<img src ='./static/image/image_mj/7m.gif'>"
+                    case 28:
+                        output += "<img src ='./static/image/image_mj/8m.gif'>"
+                    case 29:
+                        output += "<img src ='./static/image/image_mj/9m.gif'>"
+                    case 31:
+                        output += "<img src ='./static/image/image_mj/1p.gif'>"
+                    case 32:
+                        output += "<img src ='./static/image/image_mj/2p.gif'>"
+                    case 33:
+                        output += "<img src ='./static/image/image_mj/3p.gif'>"
+                    case 34:
+                        output += "<img src ='./static/image/image_mj/4p.gif'>"
+                    case 35:
+                        if item.red == True:
+                            output += "<img src ='./static/image/image_mj/0p.gif'>"
+                        else:
+                            output += "<img src ='./static/image/image_mj/5p.gif'>"
+                    case 36:
+                        output += "<img src ='./static/image/image_mj/6p.gif'>"
+                    case 37:
+                        output += "<img src ='./static/image/image_mj/7p.gif'>"
+                    case 38:
+                        output += "<img src ='./static/image/image_mj/8p.gif'>"
+                    case 39:
+                        output += "<img src ='./static/image/image_mj/9p.gif'>"
+                    case 41:
+                        output += "<img src ='./static/image/image_mj/1z.gif'>"
+                    case 44:
+                        output += "<img src ='./static/image/image_mj/2z.gif'>"
+                    case 47:
+                        output += "<img src ='./static/image/image_mj/3z.gif'>"
+                    case 50:
+                        output += "<img src ='./static/image/image_mj/4z.gif'>"
+                    case 53:
+                        output += "<img src ='./static/image/image_mj/5z.gif'>"
+                    case 56:
+                        output += "<img src ='./static/image/image_mj/6z.gif'>"
+                    case 59:
+                        output += "<img src ='./static/image/image_mj/7z.gif'>"
+                output += " " # 每一张牌的间隔
+            output += "&nbsp;&nbsp;&nbsp;" # 每一组手牌、副露的间隔
+        output += "<br>" # 牌型展示结束的换行
+
+        # 2.输出符数组
+        output += f"符数{i.m}符数组合为{i.m_combinations}<br>"
+
+        # 3.输出番数组
         if "立直" in i.combinations_count:
             output += "立直 一番<br>"
         if "一发" in i.combinations_count:
@@ -1067,17 +1167,28 @@ def multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata
             output += f"小三元 两番<br>"
         if "七对子" in i.combinations_count:
             output += f"七对子 两番<br>"
+        dora_num = 0
         if Mj_input.dora_num:
             if int(Mj_input.dora_num) != 0 :
+                dora_num += int(Mj_input.dora_num)
                 output += f"宝牌 {Mj_input.dora_num}番<br>"
         if i.red_dora:
             output += f"赤宝牌 {i.red_dora}番<br>"
+            dora_num += int(Mj_input.dora_num)
         if Mj_input.dora_num:
             if int(Mj_input.dora_num) != 0 :
                 output += f"里宝牌 {Mj_input.dora_num}番<br>"
-        output += "\n"
-    return output
+                dora_num += int(Mj_input.dora_num)
 
+        # 4.输出计分组
+        if i.m % 10 != 0:
+            if i.m != 25:
+                m_point = (10 - i.m % 10) + i.m
+        if i.multiple_count - dora_num == 0:
+            output += f"得分：无役 无法和牌<br>"
+        else:
+            output += f"得分：{m_point}符{i.multiple_count + dora_num}番{i.point_count}<br>"
+    return output
 
 
 #
@@ -1088,12 +1199,12 @@ if __name__ == "__main__" : # 主程序用于测试
     # 牌组计算阶段
     Mj_input = Mjobject()
     # 模拟前端传回 Mjobject 类 其中包含十项数据 ：
-    Mj_input.hand = "222s东东046p777s111s" # 手牌
+    Mj_input.hand = "123123123s99发发9s" # 手牌
     Mj_input.inputMPdata1 = "" # 副露1
     Mj_input.inputMPdata2 = "" # 副露2
     Mj_input.inputMPdata3 = "" # 副露3
     Mj_input.inputMPdata4 = "" # 副露4
-    Mj_input.way_to_hepai = [] # 和牌方式
+    Mj_input.way_to_hepai = ["wayToHepaiZi"] # 和牌方式
     Mj_input.dora_num = "0" # 宝牌
     Mj_input.deep_dora_num = "0" # 里宝牌
     Mj_input.position_select = "positionDong" # 自风
@@ -1113,7 +1224,9 @@ if __name__ == "__main__" : # 主程序用于测试
     MPcheck(inputMPdata3,inputdata)  # 处理副露3
     MPcheck(inputMPdata4,inputdata)  # 处理副露4
 
-    # 遍历所有可能的雀头状态 存储于alllist当中
+    # 主程序:遍历所有可能的雀头状态 存储于alllist当中
+    # ！包含冗余代码:此Paizucheck方法以及duizi,kezi,dazi三类check方法起初计划用于以单个算法同时完成向听数计算及番型得点计算的要求,因此包含向听计算等功能（即如果牌组向听数=0 则进行计番计算）
+    # 但在目前实现中,flask应用中会对输入格式进行初步检测,确保输入满足计番格式需求;后续会使用一个单独的算法完成向听数计算以及待牌计算,如果通过,会将传参数据转发至mahjong_count。
     alllist = []
     inputdata.check() # 牌组方法自检
     alllist.extend(duizicheck(inputdata))
@@ -1141,25 +1254,25 @@ if __name__ == "__main__" : # 主程序用于测试
                 i.combinations_MP.append(f"k{i.endhand}")
 
     # 牌组计分阶段
-    # 使用multple_count 判断牌组番 并且使用前端传入的Mj_input.way_to_hepai 计算奖励番
-    multple_count(mahjonglist,Mj_input,inputdata)
 
-    # 按番数排序
-    mahjonglist = sorted(mahjonglist, key=lambda i:i.multiple_count,reverse=True)
+    # 1.计算番数 按番数排序
+    multple_count(mahjonglist, Mj_input, inputdata)
+    mahjonglist = sorted(mahjonglist, key=lambda i: i.multiple_count, reverse=True)
 
-    # 打印番数
+    # 2.计算符数
+    m_count(mahjonglist, Mj_input)
+
+    # 3.计算得点
+    point_count(mahjonglist, Mj_input)
+
+    # 打印番数、符数、得点
     for i in mahjonglist:
         print(f"手牌:{i.combinations}副露:{i.combinations_MP}番种:{i.combinations_count}含宝牌番数为:{i.multiple_count}")
+        print(f"手牌:{i.combinations}副露:{i.combinations_MP}符数种为：{i.m_combinations}符数:{i.m}")
+        print(i.point_count)
 
-    # 计算符数
-    m_count(mahjonglist,Mj_input)
-
-    # 打印符数
-    for i in mahjonglist:
-        print(f"手牌:{i.combinations}副露:{i.combinations_MP}符数:{i.m}")
-
-    # 使用 .combinations_count(番种) .multiple_count(番值) .m(符数) 根据日麻番种排序的特定习惯,列举出计算结果
-    output = multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata2,inputMPdata3,inputMPdata4)
+    # 根据番数、符数、得点返回前端结果
+    output = multple_count_output(mahjonglist, Mj_input, inputdata, inputMPdata1, inputMPdata2, inputMPdata3,inputMPdata4)
     print(output)
 
 # 主程序副本 供外部调用
@@ -1179,7 +1292,9 @@ def mahjong_count(Mj_input):
     MPcheck(inputMPdata3,inputdata)  # 处理副露3
     MPcheck(inputMPdata4,inputdata)  # 处理副露4
 
-    # 遍历所有可能的雀头状态 存储于alllist当中
+    # 主程序:遍历所有可能的雀头状态 存储于alllist当中
+    # ！包含冗余代码:此Paizucheck方法以及duizi,kezi,dazi三类check方法起初计划用于以单个算法同时完成向听数计算及番型得点计算的要求,因此包含向听计算等功能（即如果牌组向听数=0 则进行计番计算）
+    # 但在目前实现中,flask应用中会对输入格式进行初步检测,确保输入满足计番格式需求;后续会使用一个单独的算法完成向听数计算以及待牌计算,如果通过,会将传参数据转发至mahjong_count。
     alllist = []
     inputdata.check() # 牌组方法自检
     alllist.extend(duizicheck(inputdata))
@@ -1200,37 +1315,36 @@ def mahjong_count(Mj_input):
     mahjonglist = distinctMjlist(mahjonglist)
 
     # 预处理 将对碰和牌的刻子移出手牌组合,放入副露组合
-    if "wayToHepaiZi" not in Mj_input.way_to_hepai: # 如果不是自摸 荣和张如果构成暗刻 暗刻转为明刻
+    if "wayToHepaiZi" not in Mj_input.way_to_hepai:  # 如果不是自摸 荣和张如果构成暗刻 暗刻转为明刻
         for i in mahjonglist:
             if f"k{i.endhand}" in i.combinations:
                 i.combinations.remove(f"k{i.endhand}")
                 i.combinations_MP.append(f"k{i.endhand}")
 
     # 牌组计分阶段
-    # 使用multple_count 判断牌组番 并且使用前端传入的Mj_input.way_to_hepai 计算奖励番
-    multple_count(mahjonglist,Mj_input,inputdata)
 
-    # 按番数排序
-    mahjonglist = sorted(mahjonglist, key=lambda i:i.multiple_count,reverse=True)
+    # 1.计算番数 按番数排序
+    multple_count(mahjonglist, Mj_input, inputdata)
+    mahjonglist = sorted(mahjonglist, key=lambda i: i.multiple_count, reverse=True)
 
-    # 打印番数
+    # 2.计算符数
+    m_count(mahjonglist, Mj_input)
+
+    # 3.计算得点
+    point_count(mahjonglist, Mj_input)
+
+    # 打印番数、符数、得点
     for i in mahjonglist:
         print(f"手牌:{i.combinations}副露:{i.combinations_MP}番种:{i.combinations_count}含宝牌番数为:{i.multiple_count}")
+        print(f"手牌:{i.combinations}副露:{i.combinations_MP}符数种为：{i.m_combinations}符数:{i.m}")
+        print(i.point_count)
 
-    # 计算符数
-    m_count(mahjonglist,Mj_input)
-
-    # 打印符数
-    for i in mahjonglist:
-        print(f"手牌:{i.combinations}副露:{i.combinations_MP}符数:{i.m}")
-
-    # 使用 .combinations_count(番种) .multiple_count(番值) .m(符数) 根据日麻番种排序的特定习惯,列举出计算结果
-    output = multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata2,inputMPdata3,inputMPdata4)
-    print(output)
-
+    # 根据番数、符数、得点返回前端结果
+    output = multple_count_output(mahjonglist, Mj_input, inputdata, inputMPdata1, inputMPdata2, inputMPdata3,inputMPdata4)
     return output
 
 
-#
-#
-#
+# 要处理的问题4.添加数据库存储输入结果和错误信息
+# 要处理的问题5.服务器部署
+# 要处理的问题6.论文撰写
+# 要处理的问题7.页面设计
