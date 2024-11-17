@@ -1342,9 +1342,3 @@ def mahjong_count(Mj_input):
     # 根据番数、符数、得点返回前端结果
     output = multple_count_output(mahjonglist, Mj_input, inputdata, inputMPdata1, inputMPdata2, inputMPdata3,inputMPdata4)
     return output
-
-
-# 要处理的问题4.添加数据库存储输入结果和错误信息
-# 要处理的问题5.服务器部署
-# 要处理的问题6.论文撰写
-# 要处理的问题7.页面设计
