@@ -39,9 +39,19 @@ def return_result(mj_input,output,is_valid):
     db.session.commit()
 
 @app.route("/",methods=["GET","POST","PUT"])
-def index():
+@app.route("/index",methods=["GET","POST","PUT"])
+def home():
     return render_template("index.html")
-    print(wayToHepai)
+
+@app.route("/mahjong_RC",methods=["GET","POST","PUT"])
+def count_page():
+    output = ""
+    return render_template("mahjong_RC.html",output = output)
+
+@app.route("/mahjong_XT",methods=["GET","POST","PUT"])
+@app.route("/mahjong_GB",methods=["GET","POST","PUT"])
+def pleasewait(): # 开发中 不做定义
+    return render_template("index.html")
 
 @app.route("/count",methods=["POST"])
 def get_count():
@@ -104,7 +114,7 @@ def get_count():
             output = "格式错误:手牌与副露中不得出现超出0,1,2,3,4,5,6,7,8,9,0,s,m,p,东,南,西,北的字符"
             is_valid = False
             return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-            return render_template("index.html", Mj_count=Mj_count, output = output)
+            return render_template("mahjong_RC.html", Mj_count=Mj_count, output = output)
 
     # 2.如果传入的副露不为空并且不符合allow_MP:中的组合即报错
     MP_list = [Mahjong_hand.inputMPdata1,Mahjong_hand.inputMPdata2,Mahjong_hand.inputMPdata3,Mahjong_hand.inputMPdata4]
@@ -115,7 +125,7 @@ def get_count():
                 output = f"格式错误:副露中只能出现{allow_MP}内的组合"
                 is_valid = False
                 return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-                return render_template("index.html", Mj_count=Mj_count, output=output)
+                return render_template("mahjong_RC.html.html", Mj_count=Mj_count, output=output)
 
     # 3.如果传入的副露加上手牌超出不足14枚则报错
     for i in Mahjong_hand.hand:
@@ -126,12 +136,12 @@ def get_count():
             output = "格式错误:传入麻将牌数量大于14"
             is_valid = False
             return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-            return render_template("index.html", Mj_count=Mj_count, output=output)
+            return render_template("mahjong_RC.html", Mj_count=Mj_count, output=output)
         else: # 小于14
             output = "格式错误:传入麻将牌数量小于14"
             is_valid = False
             return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-            return render_template("index.html", Mj_count=Mj_count, output=output)
+            return render_template("mahjong_RC.html", Mj_count=Mj_count, output=output)
 
     # 4.如果宝牌和里宝牌的输入不为阿拉伯数字则报错
     if Mahjong_hand.deep_dora_num:
@@ -139,13 +149,13 @@ def get_count():
             output = "格式错误:宝牌和里宝牌应当为阿拉伯数字"
             is_valid = False
             return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-            return render_template("index.html", Mj_count=Mj_count, output=output)
+            return render_template("mahjong_RC.html", Mj_count=Mj_count, output=output)
     if Mahjong_hand.dora_num:
         if not Mahjong_hand.dora_num.isdigit():
             output = "格式错误:宝牌和里宝牌应当为阿拉伯数字"
             is_valid = False
             return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-            return render_template("index.html", Mj_count=Mj_count, output=output)
+            return render_template("mahjong_RC.html", Mj_count=Mj_count, output=output)
 
     # 计算输出
     try:
@@ -154,11 +164,12 @@ def get_count():
         output = f"计算错误:主程序运算出错,error_name = {count_error},请联系网站管理员q1448826180"
         is_valid = False
         return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-        return render_template("index.html", Mj_count=Mj_count, output=output)
+        return render_template("mahjong_RC.html", Mj_count=Mj_count, output=output)
 
     print("返回信息:",Mj_count)
     return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-    return render_template("index.html",Mj_count = Mj_count,output = output)
+    return render_template("mahjong_RC.html",Mj_count = Mj_count,output = output)
 
 if __name__ == "__main__" :
     app.run(host=app.config['HOST'], port=app.config['PORT'], debug=app.config['DEBUG'])
+

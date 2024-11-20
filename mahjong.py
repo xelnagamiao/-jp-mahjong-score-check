@@ -522,22 +522,23 @@ def multple_count(mahjonglist,Mj_input,inputdata):
     混一色 = False
     混老头 = False
     断幺 = False
-    print(inputdata)
-    if all(10 < element < 20 for element in inputdata):
+    all_tiles = majongdata(Mj_input.hand+Mj_input.inputMPdata1+Mj_input.inputMPdata2+Mj_input.inputMPdata3+Mj_input.inputMPdata4)
+    print(all_tiles)
+    if all(10 < element < 20 for element in all_tiles):
         清一色 = True
-    elif all(20 < element < 30 for element in inputdata):
+    elif all(20 < element < 30 for element in all_tiles):
         清一色 = True
-    elif all(30 < element < 40 for element in inputdata):
+    elif all(30 < element < 40 for element in all_tiles):
         清一色 = True
-    elif all(10 < element < 20 or 40 < element for element in inputdata):
+    elif all(10 < element < 20 or 40 < element for element in all_tiles):
         混一色 = True
-    elif all(20 < element < 30 or 40 < element for element in inputdata):
+    elif all(20 < element < 30 or 40 < element for element in all_tiles):
         混一色 = True
-    elif all(30 < element < 40 or 40 < element for element in inputdata):
+    elif all(30 < element < 40 or 40 < element for element in all_tiles):
         混一色 = True
-    if all(element in yaojiuset for element in inputdata):
+    if all(element in yaojiuset for element in all_tiles):
         混老头 = True
-    if all(element in duanyaoset for element in inputdata):
+    if all(element in duanyaoset for element in all_tiles):
         断幺 = True
 
     副露 = False
@@ -547,12 +548,8 @@ def multple_count(mahjonglist,Mj_input,inputdata):
     里宝牌 = 0
     if Mj_input.dora_num == True:
         宝牌 = int(Mj_input.dora_num)
-    else:
-        宝牌 == 0
     if Mj_input.deep_dora_num:
-        宝牌 = int(Mj_input.dora_num)
-    else:
-        宝牌 == 0
+        里宝牌 = int(Mj_input.deep_dora_num)
 
     # part3 通过 传值检测 获取全局变量
     match Mj_input.position_select :
@@ -750,7 +747,7 @@ def multple_count(mahjonglist,Mj_input,inputdata):
                         i.combinations_count.append("一杯口")
                         i.multiple_count += 1
 
-        # 7.通过切片取尾排同的方式 如有三个尾数一致的 判断 三色同顺 三色同刻
+        # 7.通过切片取尾计同的方式 如有三个尾数一致的 判断 三色同顺 三色同刻
         same_dazi_item = ""
         same_kezi_item = ""
         dazislice = []
