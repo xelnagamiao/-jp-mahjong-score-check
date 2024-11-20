@@ -45,6 +45,7 @@ class Paizu(list):
         self.m = 20 # 2.在计符环节存储符数
         self.m_combinations = [] # 2.在计符环节存储符数组合
         self.point_count = 0 # 3.存储计分
+        self.point_result = "" # 4.存储计分描述
     def inherit(self,paizulist): # inherit方法用以在牌组进行多次check对牌组进行归纳的过程中继承先前牌组的属性
         self.roundnr = paizulist.roundnr # 继承向听数
         self.duizi = paizulist.duizi # 继承对子数
@@ -433,6 +434,8 @@ def handCheck(alllist):
                 elif i.dazicheck == False and i.kezicheck == False:
                     endlist.append(i)
                     endlist_paizu += 1
+            else:
+                endlist.append(i)
         alllist = savelist
         savelist = []
         r += 1
@@ -480,7 +483,7 @@ def multple_count(mahjonglist,Mj_input,inputdata):
     suoziset = {11, 12, 13, 14, 15, 16, 17, 18, 19}  # 索子集合
     wanziset = {21, 22, 23, 24, 25, 26, 27, 28, 29}  # 万子集合
     tongziset = {31, 32, 33, 34, 35, 36, 37, 38, 39}  # 筒子集合
-    yaojiuset = {11, 19, 21, 29, 31, 39}  # 幺九集合
+    hunlaotouset = {11, 19, 21, 29, 31, 39, 41, 44, 47, 50, 53, 56, 59}  # 幺九集合
     duanyaoset = {12, 13, 14, 15, 16, 17, 18, 21, 22, 23, 24, 25, 26, 27, 28, 32, 33, 34, 35, 36, 37, 38}  # 断幺集合
     sanyuanset = {"d53", "d56", "d59", "k53", "k56", "k59"}  # 小三元集合
     sanyuankeset = {"k53", "k56", "k59"}  # 大三元集合
@@ -536,7 +539,7 @@ def multple_count(mahjonglist,Mj_input,inputdata):
         混一色 = True
     elif all(30 < element < 40 or 40 < element for element in all_tiles):
         混一色 = True
-    if all(element in yaojiuset for element in all_tiles):
+    if all(element in hunlaotouset for element in all_tiles):
         混老头 = True
     if all(element in duanyaoset for element in all_tiles):
         断幺 = True
@@ -546,7 +549,7 @@ def multple_count(mahjonglist,Mj_input,inputdata):
     场风 = ""
     宝牌 = 0
     里宝牌 = 0
-    if Mj_input.dora_num == True:
+    if Mj_input.dora_num:
         宝牌 = int(Mj_input.dora_num)
     if Mj_input.deep_dora_num:
         里宝牌 = int(Mj_input.deep_dora_num)
@@ -567,6 +570,7 @@ def multple_count(mahjonglist,Mj_input,inputdata):
             positionset.add("d50")
         case "positionOther":
             自风 = "闲家"
+            pass
     match Mj_input.public_position_select :
         case "publicPositionDong":
             场风 = "东"
@@ -671,8 +675,8 @@ def multple_count(mahjonglist,Mj_input,inputdata):
                     gangnr += 1
         if dazinr == 4: # 因为坎张和牌不算做平和 平和处理中需要生成荣和自摸牌能够构成两面的两种可能，并且这种可能组合在all_combinnations中被发现
             possible_combinnations = []
-            possible_combinnations.append(str(i.endhand + 1) + "s")
-            possible_combinnations.append(str(i.endhand - 1) + "s")
+            possible_combinnations.append( "s" + str(i.endhand + 1))
+            possible_combinnations.append( "s" + str(i.endhand - 1))
             if any(element in all_combinations for element in possible_combinnations):
                 if 副露 == False:
                     if any(element in all_combinations for element in positionset):
@@ -741,7 +745,7 @@ def multple_count(mahjonglist,Mj_input,inputdata):
                     sameitem = item
                     if "一杯口" in i.combinations_count:
                         i.combinations_count.append("二杯口")
-                        i.multiple_count += 3
+                        i.multiple_count += 1
                         i.combinations_count.remove("一杯口")
                     else:
                         i.combinations_count.append("一杯口")
@@ -764,13 +768,16 @@ def multple_count(mahjonglist,Mj_input,inputdata):
                 if 副露 == False:
                     i.combinations_count.append("三色同顺")
                     i.multiple_count += 2
+                    break # 三色同顺三色同刻只能计一次
                 else:
                     i.combinations_count.append("副露三色同顺")
                     i.multiple_count += 1
+                    break
         for item in kezislice:
             if kezislice.count(item) == 3 :
                 i.combinations_count.append("三色同刻")
                 i.multiple_count += 2
+                break
 
         # 8.统计前3part的 传值番数 立直 双立直 一发 河底 海底 岭上 抢杠 自摸 以及全局番数 清混一色 混老头 断幺
         if 立直 == True:
@@ -920,6 +927,10 @@ def point_count(mahjonglist,Mj_input):
         if i.m % 10 != 0:
             if i.m != 25:
                 m_point = (10 - i.m % 10) + i.m
+            else:
+                m_point = i.m
+        else:
+            m_point = i.m
         multple_count = (i.multiple_count + i.red_dora + (int(Mj_input.dora_num) if Mj_input.dora_num.isdigit() else 0)
                          + (int(Mj_input.deep_dora_num) if Mj_input.deep_dora_num.isdigit() else 0))
         if i.m * 2 ** (multple_count + 2) * 4 > 8000:
@@ -942,28 +953,33 @@ def point_count(mahjonglist,Mj_input):
             if "wayToHepaiZi" in Mj_input.way_to_hepai:
                 # 亲家自摸
                 if Mj_input.position_select == "positionDong":
-                    i.point_count = f"亲家{point_sign}——自摸{base_point * 2}all"
+                    i.point_result = f"亲家{point_sign}——自摸{base_point * 2}all"
+                    i.point_count = base_point * 6
                 # 亲家荣和
                 else:
-                    i.point_count = f"亲家{point_sign}——荣和{base_point * 6}点"
+                    i.point_result = f"亲家{point_sign}——荣和{base_point * 6}点"
+                    i.point_count = base_point * 6
             else:
                 # 闲家自摸
                 if Mj_input.position_select == "positionDong":
                     hand_point_1 = base_point * 2
                     hand_point_2 = base_point * 1
-                    i.point_count = f"闲家{point_sign}——自摸{hand_point_1}-{hand_point_2}"
+                    i.point_result = f"闲家{point_sign}——自摸{hand_point_1}-{hand_point_2}"
+                    i.point_count = base_point * 4
                 # 闲家荣和
                 else:
-                    i.point_count = f"闲家{point_sign}——荣和{base_point * 4}点"
+                    i.point_result = f"闲家{point_sign}——荣和{base_point * 4}点"
+                    i.point_count = base_point * 4
         else:
             # 得分未超过满贯
             if "wayToHepaiZi" in Mj_input.way_to_hepai:
                 # 亲家自摸
                 if Mj_input.position_select == "positionDong":
-                    hand_point = i.m * 2 ** (multple_count + 2) * 2
-                    if hand_point % 100 != 0:
-                        hand_point += 100 - hand_point % 100
-                    i.point_count = f"亲家自摸{base_point}all"
+                    i.point_count = m_point * 2 ** (multple_count + 2) * 2
+                    if i.point_count % 100 != 0:
+                        i.point_count += 100 - i.point_count % 100
+                    i.point_result = f"亲家自摸{base_point}all"
+                    i.point_count = m_point * 6
                 # 闲家自摸
                 else:
                     hand_point_1 = m_point * 2 ** (multple_count + 2) * 2
@@ -972,21 +988,21 @@ def point_count(mahjonglist,Mj_input):
                     hand_point_2 = m_point * 2 ** (multple_count + 2) * 1
                     if hand_point_2 % 100 != 0:
                         hand_point_2 += 100 - hand_point_2 % 100
-                    i.point_count = f"闲家自摸{hand_point_1}-{hand_point_2}"
+                    i.point_result = f"闲家自摸{hand_point_1}-{hand_point_2}"
+                    i.point_count = m_point * 4
             else:
                 # 亲家荣和
                 if Mj_input.position_select == "positionDong":
-                    i.point_count = "123"
-                    hand_point = m_point * 2 ** (multple_count + 2) * 6
-                    if hand_point % 100 != 0:
-                        hand_point += 100 - hand_point % 100
-                    i.point_count = f"亲家荣和{hand_point}"
+                    i.point_count = m_point * 2 ** (multple_count + 2) * 6
+                    if i.point_count % 100 != 0:
+                        i.point_count += 100 - i.point_count % 100
+                    i.point_result = f"亲家荣和{i.point_count}"
                 # 闲家荣和
                 else:
-                    hand_point = m_point * 2 ** (multple_count + 2) * 4
-                    if hand_point % 100 != 0:
-                        hand_point += 100 - hand_point % 100
-                    i.point_count = f"闲家荣和{hand_point}"
+                    i.point_count = m_point * 2 ** (multple_count + 2) * 4
+                    if i.point_count % 100 != 0:
+                        i.point_count += 100 - i.point_count % 100
+                    i.point_result = f"闲家荣和{i.point_count}"
 
 # 合并计番、计符、计分结果,输出运算结果
 def multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata2,inputMPdata3,inputMPdata4):
@@ -1084,16 +1100,18 @@ def multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata
         # 3.输出番数组
         if "立直" in i.combinations_count:
             output += "立直 一番<br>"
+        if "双立直" in i.combinations_count:
+            output += "双立直 两番<br>"
         if "一发" in i.combinations_count:
             output += "一发 一番<br>"
         if "自摸" in i.combinations_count:
-            output += "自摸 一番<br>"
+            output += "门前清自摸和 一番<br>"
         if "河底" in i.combinations_count:
-            output += "河底 一番<br>"
+            output += "河底捞鱼 一番<br>"
         if "海底" in i.combinations_count:
-            output += "海底 一番<br>"
+            output += "海底摸月 一番<br>"
         if "岭上" in i.combinations_count:
-            output += "岭上 一番<br>"
+            output += "岭上开花 一番<br>"
         if "抢杠" in i.combinations_count:
             output += "抢杠 一番<br>"
         if "断幺" in i.combinations_count:
@@ -1123,11 +1141,11 @@ def multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata
         if "役牌发" in i.combinations_count:
             output += "役牌发 一番<br>"
         if "混全" in i.combinations_count:
-            output += "混全 二番<br>"
+            output += "混全带幺九 二番<br>"
         if "副露混全" in i.combinations_count:
             output += "副露混全 一番<br>"
         if "纯全" in i.combinations_count:
-            output += "纯全 三番<br>"
+            output += "纯全带幺九 三番<br>"
         if "副露纯全" in i.combinations_count:
             output += "副露纯全 两番<br>"
         if "一杯口" in i.combinations_count:
@@ -1135,11 +1153,11 @@ def multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata
         if "二杯口" in i.combinations_count:
             output += "二杯口 两番<br>"
         if "混一色" in i.combinations_count:
-            output += "混一色 三番<br>"
+            output += "门前混一色 三番<br>"
         if "副露混一色" in i.combinations_count:
             output += "副露混一色 两番<br>"
         if "清一色" in i.combinations_count:
-            output += "清一色 六番<br>"
+            output += "门前清一色 六番<br>"
         if "副露清一色" in i.combinations_count:
             output += "副露清一色 五番<br>"
         if "混老头" in i.combinations_count:
@@ -1174,17 +1192,20 @@ def multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata
             dora_num += int(Mj_input.dora_num)
         if Mj_input.dora_num:
             if int(Mj_input.dora_num) != 0 :
-                output += f"里宝牌 {Mj_input.dora_num}番<br>"
-                dora_num += int(Mj_input.dora_num)
-
+                output += f"里宝牌 {Mj_input.deep_dora_num}番<br>"
+                dora_num += int(Mj_input.deep_dora_num)
         # 4.输出计分组
         if i.m % 10 != 0:
             if i.m != 25:
                 m_point = (10 - i.m % 10) + i.m
+            else:
+                m_point = i.m
+        else:
+            m_point = i.m
         if i.multiple_count - dora_num == 0:
             output += f"得分：无役 无法和牌<br>"
         else:
-            output += f"得分：{m_point}符{i.multiple_count + dora_num}番{i.point_count}<br>"
+            output += f"得分：{m_point}符{i.multiple_count + dora_num}番{i.point_result}<br>"
     return output
 
 
@@ -1196,12 +1217,12 @@ if __name__ == "__main__" : # 主程序用于测试
     # 牌组计算阶段
     Mj_input = Mjobject()
     # 模拟前端传回 Mjobject 类 其中包含十项数据 ：
-    Mj_input.hand = "123123123s99发发9s" # 手牌
+    Mj_input.hand = "123s456p789m西西678s" # 手牌
     Mj_input.inputMPdata1 = "" # 副露1
     Mj_input.inputMPdata2 = "" # 副露2
     Mj_input.inputMPdata3 = "" # 副露3
     Mj_input.inputMPdata4 = "" # 副露4
-    Mj_input.way_to_hepai = ["wayToHepaiZi"] # 和牌方式
+    Mj_input.way_to_hepai = ["wayToHepaiRo"] # 和牌方式
     Mj_input.dora_num = "0" # 宝牌
     Mj_input.deep_dora_num = "0" # 里宝牌
     Mj_input.position_select = "positionDong" # 自风
@@ -1220,6 +1241,7 @@ if __name__ == "__main__" : # 主程序用于测试
     MPcheck(inputMPdata2,inputdata)  # 处理副露2
     MPcheck(inputMPdata3,inputdata)  # 处理副露3
     MPcheck(inputMPdata4,inputdata)  # 处理副露4
+
 
     # 主程序:遍历所有可能的雀头状态 存储于alllist当中
     # ！包含冗余代码:此Paizucheck方法以及duizi,kezi,dazi三类check方法起初计划用于以单个算法同时完成向听数计算及番型得点计算的要求,因此包含向听计算等功能（即如果牌组向听数=0 则进行计番计算）
@@ -1252,9 +1274,8 @@ if __name__ == "__main__" : # 主程序用于测试
 
     # 牌组计分阶段
 
-    # 1.计算番数 按番数排序
+    # 1.计算番数
     multple_count(mahjonglist, Mj_input, inputdata)
-    mahjonglist = sorted(mahjonglist, key=lambda i: i.multiple_count, reverse=True)
 
     # 2.计算符数
     m_count(mahjonglist, Mj_input)
@@ -1262,11 +1283,14 @@ if __name__ == "__main__" : # 主程序用于测试
     # 3.计算得点
     point_count(mahjonglist, Mj_input)
 
+    # 按得点排序
+    mahjonglist = sorted(mahjonglist, key=lambda i: i.point_count, reverse=True)
+
     # 打印番数、符数、得点
     for i in mahjonglist:
         print(f"手牌:{i.combinations}副露:{i.combinations_MP}番种:{i.combinations_count}含宝牌番数为:{i.multiple_count}")
         print(f"手牌:{i.combinations}副露:{i.combinations_MP}符数种为：{i.m_combinations}符数:{i.m}")
-        print(i.point_count)
+        print(f"得分：{i.point_result}")
 
     # 根据番数、符数、得点返回前端结果
     output = multple_count_output(mahjonglist, Mj_input, inputdata, inputMPdata1, inputMPdata2, inputMPdata3,inputMPdata4)
@@ -1293,14 +1317,14 @@ def mahjong_count(Mj_input):
     # ！包含冗余代码:此Paizucheck方法以及duizi,kezi,dazi三类check方法起初计划用于以单个算法同时完成向听数计算及番型得点计算的要求,因此包含向听计算等功能（即如果牌组向听数=0 则进行计番计算）
     # 但在目前实现中,flask应用中会对输入格式进行初步检测,确保输入满足计番格式需求;后续会使用一个单独的算法完成向听数计算以及待牌计算,如果通过,会将传参数据转发至mahjong_count。
     alllist = []
-    inputdata.check() # 牌组方法自检
+    inputdata.check()  # 牌组方法自检
     alllist.extend(duizicheck(inputdata))
     print("以下是几种雀头可能", alllist)
 
     # 如果主牌组的roundnr不为0 (没有副露) 就进行七对子和国士无双的检测 也将结果存储在alllist当中
     if inputdata.roundnr == 0:
-        QDcheck(inputdata,alllist)
-        GScheck(inputdata,alllist)
+        QDcheck(inputdata, alllist)
+        GScheck(inputdata, alllist)
 
     # handCheck方法将所有alllist中的牌组进行搭子和刻子的判断 如果同时满足两个条件则均进行判断 保证得出所有和牌可能性 直到alllist内不再有可以迭代的对象
     endlist = handCheck(alllist)
@@ -1320,9 +1344,8 @@ def mahjong_count(Mj_input):
 
     # 牌组计分阶段
 
-    # 1.计算番数 按番数排序
+    # 1.计算番数
     multple_count(mahjonglist, Mj_input, inputdata)
-    mahjonglist = sorted(mahjonglist, key=lambda i: i.multiple_count, reverse=True)
 
     # 2.计算符数
     m_count(mahjonglist, Mj_input)
@@ -1330,12 +1353,16 @@ def mahjong_count(Mj_input):
     # 3.计算得点
     point_count(mahjonglist, Mj_input)
 
+    # 按得点排序
+    mahjonglist = sorted(mahjonglist, key=lambda i: i.point_count, reverse=True)
+
     # 打印番数、符数、得点
     for i in mahjonglist:
         print(f"手牌:{i.combinations}副露:{i.combinations_MP}番种:{i.combinations_count}含宝牌番数为:{i.multiple_count}")
         print(f"手牌:{i.combinations}副露:{i.combinations_MP}符数种为：{i.m_combinations}符数:{i.m}")
-        print(i.point_count)
+        print(f"得分：{i.point_result}")
 
     # 根据番数、符数、得点返回前端结果
     output = multple_count_output(mahjonglist, Mj_input, inputdata, inputMPdata1, inputMPdata2, inputMPdata3,inputMPdata4)
     return output
+

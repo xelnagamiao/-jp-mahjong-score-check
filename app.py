@@ -68,9 +68,9 @@ def get_count():
     Mahjong_hand.position_select = request.form.get("positionSelect")
     Mahjong_hand.public_position_select = request.form.get("publicPositionSelect")
     # 如果和牌方式是河底或抢杠 属于荣和型 如果和牌方式属于海底或岭上 属于自摸型
-    if "wayToHepaiHe" or "wayToHepaiQG" in Mahjong_hand.way_to_hepai:
+    if "wayToHepaiHe" in Mahjong_hand.way_to_hepai or "wayToHepaiQG" in Mahjong_hand.way_to_hepai:
         Mahjong_hand.way_to_hepai.append("wayToHePaiRo")
-    if "wayToHepaiHai" or "wayToHepaiLin" in Mahjong_hand.way_to_hepai:
+    if "wayToHepaiHai" in Mahjong_hand.way_to_hepai or "wayToHepaiLin" in Mahjong_hand.way_to_hepai:
         Mahjong_hand.way_to_hepai.append("wayToHePaiZi")
 
     print("收到信息：") # 显示数据
