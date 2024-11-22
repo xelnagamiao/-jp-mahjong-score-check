@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0"><!-- 使页面在移动设备上适应屏幕宽度 -->
     <title>mahjong.fit-首页</title>
     <link rel="stylesheet" href="..\static\css\style.css">
+    <link rel="icon" href="..\static\image\logo.svg" type="image/png">
     <style>
         body {
             font-family: Arial, sans-serif;/* 首选字体,次选字体 */
@@ -57,7 +58,7 @@
 <body>
     <header>
         <a href="index" data-page="home" style="background-color: #FF6B6B;">首页-mahjong.fit</a>
-        <a href="mahjong_XT" data-page="shanten" style="background-color: #4ECDC4;">手牌向听数判断</a>
+        <a href="mahjong_XT" data-page="shanten" style="background-color: #4ECDC4;">听牌待牌判断</a>
         <a href="mahjong_GB" data-page="chinese" style="background-color: #45B7D1;">国标麻将牌型解算</a>
         <a href="mahjong_RC" data-page="riichi" style="background-color: #FF8C42;">立直麻将牌型解算</a>
     </header>
@@ -65,22 +66,22 @@
     <main>
         <div class="card" data-page="home" style="background-color: #FF6B6B;">
             <h2>首页-mahjong.fit</h2>
-            <p>欢迎来到麻将分析网站</p>
+            <p>欢迎来到麻将分析网站mahjong-fit</p>
             <a href="index"></a>
         </div>
         <div class="card" data-page="shanten" style="background-color: #4ECDC4;">
-            <h2>手牌向听数判断</h2>
-            <p>分析您的手牌向听数</p>
+            <h2>听牌待牌判断</h2>
+            <p>分析手牌是否听牌，以及听牌手牌的待牌</p>
             <a href="mahjong_XT"></a>
         </div>
         <div class="card" data-page="chinese" style="background-color: #45B7D1;">
             <h2>国标麻将牌型解算</h2>
-            <p>深入分析国标麻将策略</p>
+            <p>开发中：根据您输入的手牌、副露、花牌、和牌方式计算出可能的和牌构成与他家支付的点数</p>
             <a href="mahjong_GB"></a>
         </div>
         <div class="card" data-page="riichi" style="background-color: #FF8C42;">
             <h2>立直麻将牌型解算</h2>
-            <p>探索立直麻将的技巧</p>
+            <p>根据您输入的手牌、副露、宝牌、和牌方式计算出可能的和牌构成与他家支付的点数</p>
             <a href="mahjong_RC"></a>
         </div>
     </main>

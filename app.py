@@ -4,6 +4,7 @@
 from flask import Flask,render_template,request
 from flask_sqlalchemy import SQLAlchemy
 from mahjong import mahjong_count,Mjobject
+from count_xt import xt_count
 
 # 创建app变量 传参flask对象 __name__ = __main__  使用__name__参数 使flask类所调用的库的根目录确定为app.py本文件所在的目录
 app = Flask(__name__)
@@ -33,26 +34,57 @@ class MahjongResult(db.Model):
 with app.app_context():
     db.create_all()
 
+# 立直麻将对数据库返回值
 def return_result(mj_input,output,is_valid):
     result = MahjongResult(mj_input=mj_input, mj_output=output, is_valid=is_valid)
     db.session.add(result)
     db.session.commit()
+
+#——————————————————————————————————————————————————————————————————————————————————————————————————————————#
 
 @app.route("/",methods=["GET","POST","PUT"])
 @app.route("/index",methods=["GET","POST","PUT"])
 def home():
     return render_template("index.html")
 
+@app.route("/mahjong_XT",methods=["GET","POST","PUT"])
+def xt_page():
+    output = ""
+    return render_template("mahjong_XT.html",output=output)
+@app.route("/count_hand",methods=["GET","POST","PUT"])
+def xt_hand_count():
+    hand = request.form.get('hand')
+    count_tiles = 0
+    allow_character = {"0","1","2","3","4","5","6","7","8","9","0","s","m","p","东","南","西","北","中","白","发"} # 输入字符串限制
+    count_character = {"0","1","2","3","4","5","6","7","8","9","0","东","南","西","北","中","白","发"} # 被计入麻将牌的各字符
+    # 1.输入超出字符串限制
+    for i in hand:
+        if i not in allow_character:
+            output = "格式错误:手牌中不得出现超出0,1,2,3,4,5,6,7,8,9,0,s,m,p,东,南,西,北的字符"
+            return render_template("mahjong_XT.html",output = output)
+    # 2.传入手牌超出或不足14枚
+    for i in hand:
+        if i in count_character:
+            count_tiles += 1
+    if count_tiles != 13:
+        if count_tiles > 13: # 大于13
+            output = "格式错误:传入麻将牌数量大于13"
+            return render_template("mahjong_XT.html",output=output)
+        else: # 小于13
+            output = "格式错误:传入麻将牌数量小于13"
+            return render_template("mahjong_XT.html",output=output)
+    output = xt_count(hand)
+    return render_template("mahjong_XT.html",output=output)
+
+@app.route("/mahjong_GB",methods=["GET","POST","PUT"])
+def pleasewait(): # 开发中
+    return render_template("index.html")
+
+# count_page 用于导向立直麻将解析界面 get_count 用于返回立直麻将解析界面结果值
 @app.route("/mahjong_RC",methods=["GET","POST","PUT"])
 def count_page():
     output = ""
     return render_template("mahjong_RC.html",output = output)
-
-@app.route("/mahjong_XT",methods=["GET","POST","PUT"])
-@app.route("/mahjong_GB",methods=["GET","POST","PUT"])
-def pleasewait(): # 开发中 不做定义
-    return render_template("index.html")
-
 @app.route("/count",methods=["POST"])
 def get_count():
     Mj_count = "通信中"
@@ -125,7 +157,7 @@ def get_count():
                 output = f"格式错误:副露中只能出现{allow_MP}内的组合"
                 is_valid = False
                 return_result(mj_input=mj_input, output=output, is_valid=is_valid)
-                return render_template("mahjong_RC.html.html", Mj_count=Mj_count, output=output)
+                return render_template("mahjong_RC.html", Mj_count=Mj_count, output=output)
 
     # 3.如果传入的副露加上手牌超出不足14枚则报错
     for i in Mahjong_hand.hand:

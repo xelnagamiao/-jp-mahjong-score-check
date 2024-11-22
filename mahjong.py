@@ -23,9 +23,10 @@ class Pai(int):
 class Paizu(list):
     def __init__(self, pais=None):
         super().__init__()
-        if pais is None:
+        if pais is None: # 传值为空则建立空列表
             pais = []
-        self.extend(pais) # 继承list方法
+        self.extend(pais)  # 有传值则通过传值赋值自身列表
+        
         self.roundnr = 0 # 代表向听数
         self.duizi = 0 # 代表对子数
         self.dazi = 0 # 代表搭子数
@@ -95,16 +96,28 @@ class Mjobject():
         public_position_select = ""
 # majongdata 用于将手牌及副露传值处理为格式化数据
 def majongdata(data):
-    # 建立字牌匹配集
-    red_dora_sign = False
-    red_dora = 0 # 检测红宝牌
-    red_dora_number = []
+    # 将红宝牌单独保存
+    redsave = ""
+    redsaves = ""
+    redsavem = ""
+    redsavep = ""
     for i in data:
-        if i == "0" :
-            red_dora += 1
-            red_dora_sign = True
-            break
-    savewordclass={"东", "南", "西", "北","发","白","中"}
+        match i:
+            case "0":
+                redsave += i
+            case "s":
+                redsaves += redsave
+                redsave = ""
+            case "m":
+                redsavem += redsave
+                redsave = ""
+            case "p":
+                redsavep += redsave
+                redsave = ""
+
+    # 建立字牌和数牌匹配集
+    savewordclass = {"东", "南", "西", "北", "发", "白", "中"}
+    savenumclass = {"1","2","3","4","5","6","7","8","9"}
     # 建立暂存不同牌组的字符串
     saves = ""
     savem = ""
@@ -115,115 +128,91 @@ def majongdata(data):
     endsave = ""
     endsaveclass = ""
     for i in data:
-        if i == "0":
-            i = "5"
         # 数字进入savenumber暂存字符串 字牌进入saveword暂存字符串
         # endsave 与 endsaveclass 用于在后续获取牌组的最后一张牌（自摸张）
-        if i.isdigit():
+        if i in savenumclass:
             savenumber += i
             endsave = i
         elif i in savewordclass:
             saveword += i
             endsave = i
-            endsaveclass = "w"
         # 当遇到牌组标签s m p 时,将暂存的数据放入对应的标签集中
         elif i == "s":
             saves += savenumber
             savenumber = ""
             endsaveclass = "s"
-            if red_dora_sign == True:
-                red_dora_number.append(15)
-                red_dora_sign = False
         elif i == "m":
             savem += savenumber
             savenumber = ""
             endsaveclass = "m"
-            if red_dora_sign == True:
-                red_dora_number.append(25)
-                red_dora_sign = False
         elif i == "p":
             savep += savenumber
             savenumber = ""
             endsaveclass = "p"
-            if red_dora_sign == True:
-                print(122222)
-                red_dora_number.append(35)
-                red_dora_sign = False
-        # 出现不匹配的值进行报错并且跳出
-        else:
-            print(f"请勿输入超出数字,字母's','m','p'以及东南西北白发中以外的字符")
-            break
         # 获得 saves,savem,savep,saveword 下一步进行合并
     mjsave=Paizu()
     # 将四个集合中的数据存储于牌组mjsave中
     for i in saves:
-        mjsave.append(int(i)+10)
+        mjsave.append(Pai(int(i)+10))
     for i in savem:
-        mjsave.append(int(i)+20)
+        mjsave.append(Pai(int(i)+20))
     for i in savep:
-        mjsave.append(int(i)+30)
+        mjsave.append(Pai(int(i)+30))
     for char in saveword:
         match char:
             case "东":
-                mjsave.append(41)
+                mjsave.append(Pai(41))
             case "南":
-                mjsave.append(44)
+                mjsave.append(Pai(44))
             case "西":
-                mjsave.append(47)
+                mjsave.append(Pai(47))
             case "北":
-                mjsave.append(50)
+                mjsave.append(Pai(50))
             case "白":
-                mjsave.append(53)
+                mjsave.append(Pai(53))
             case "发":
-                mjsave.append(56)
+                mjsave.append(Pai(56))
             case "中":
-                mjsave.append(59)
-    mjsave = sorted(mjsave)
-    mjsavelist = Paizu()
-    # 获取牌组中最后一张牌,存储于Pai().endhand
-    for i in mjsave:
-        mjsavelist.append(Pai(i))
-    if endsaveclass == "s":
-        endsave = int(endsave)+10
-    if endsaveclass == "m":
-        endsave = int(endsave)+20
-    if endsaveclass == "p":
-        endsave = int(endsave)+30
-    if endsaveclass == "w":
+                mjsave.append(Pai(59))
+    # 将endsave 合并至 mjsave.endhand
+    if endsave in savenumclass:
+        if endsaveclass == "s":
+            endsave = int(endsave) + 10
+        if endsaveclass == "m":
+            endsave = int(endsave) + 20
+        if endsaveclass == "p":
+            endsave = int(endsave) + 30
+    elif endsave in savewordclass:
         match endsave:
             case "东":
-                endsave = 41
+                mjsave.endhand = 41
             case "南":
-                endsave = 44
+                mjsave.endhand = 44
             case "西":
-                endsave = 47
+                mjsave.endhand = 47
             case "北":
-                endsave = 50
+                mjsave.endhand = 50
             case "白":
-                endsave = 53
+                mjsave.endhand = 53
             case "发":
-                endsave = 56
+                mjsave.endhand = 56
             case "中":
-                endsave = 59
-    mjsavelist.endhand = endsave
-    mjsavelist.red_dora = red_dora
-    # 标记红宝牌
-    if 15 in red_dora_number:
-        for item in mjsavelist:
-            if item == 15:
-                item.red = True
-                break
-    if 25 in red_dora_number:
-        for item in mjsavelist:
-            if item == 25:
-                item.red = True
-                break
-    if 35 in red_dora_number:
-        for item in mjsavelist:
-            if item == 35:
-                item.red = True
-                break
-    return mjsavelist # 返回牌组mjsavelist
+                mjsave.endhand = 59
+    # 将红宝牌合并进主牌组
+    redlist = []
+    for i in range(len(redsaves)):
+        redlist.append(Pai(15))
+    for i in range(len(redsavem)):
+        redlist.append(Pai(25))
+    for i in range(len(redsavep)):
+        redlist.append(Pai(35))
+    for i in redlist:
+        i.red = True
+        mjsave.append(i)
+        mjsave.red_dora += 1
+    # 排序
+    mjsave.sort(key=lambda x: x.intnr)
+    return mjsave # 返回牌组mjsavelist
 # 处理对子
 def duizicheck(duizilist):
     outputlist = []
@@ -413,9 +402,9 @@ def QDcheck(duizilist,alllist):
 # 主牌组回溯法迭代
 def handCheck(alllist):
     endlist = []
+    r = 0
     while alllist:
         savelist = []
-        r = 0
         residue_paizu = 0 # 监控savelist中一共有多少牌组
         endlist_paizu = 0
         for i in alllist:
@@ -955,17 +944,17 @@ def point_count(mahjonglist,Mj_input):
                 if Mj_input.position_select == "positionDong":
                     i.point_result = f"亲家{point_sign}——自摸{base_point * 2}all"
                     i.point_count = base_point * 6
-                # 亲家荣和
-                else:
-                    i.point_result = f"亲家{point_sign}——荣和{base_point * 6}点"
-                    i.point_count = base_point * 6
-            else:
                 # 闲家自摸
-                if Mj_input.position_select == "positionDong":
+                else:
                     hand_point_1 = base_point * 2
                     hand_point_2 = base_point * 1
                     i.point_result = f"闲家{point_sign}——自摸{hand_point_1}-{hand_point_2}"
                     i.point_count = base_point * 4
+            else:
+                # 闲家荣和
+                if Mj_input.position_select == "positionDong":
+                    i.point_result = f"亲家{point_sign}——荣和{base_point * 6}点"
+                    i.point_count = base_point * 6
                 # 闲家荣和
                 else:
                     i.point_result = f"闲家{point_sign}——荣和{base_point * 4}点"
@@ -1189,7 +1178,7 @@ def multple_count_output(mahjonglist,Mj_input,inputdata,inputMPdata1,inputMPdata
                 output += f"宝牌 {Mj_input.dora_num}番<br>"
         if i.red_dora:
             output += f"赤宝牌 {i.red_dora}番<br>"
-            dora_num += int(Mj_input.dora_num)
+            dora_num += int(i.red_dora)
         if Mj_input.dora_num:
             if int(Mj_input.dora_num) != 0 :
                 output += f"里宝牌 {Mj_input.deep_dora_num}番<br>"
@@ -1217,15 +1206,15 @@ if __name__ == "__main__" : # 主程序用于测试
     # 牌组计算阶段
     Mj_input = Mjobject()
     # 模拟前端传回 Mjobject 类 其中包含十项数据 ：
-    Mj_input.hand = "123s456p789m西西678s" # 手牌
+    Mj_input.hand = "406p406s999s东东东南南" # 手牌
     Mj_input.inputMPdata1 = "" # 副露1
     Mj_input.inputMPdata2 = "" # 副露2
     Mj_input.inputMPdata3 = "" # 副露3
     Mj_input.inputMPdata4 = "" # 副露4
-    Mj_input.way_to_hepai = ["wayToHepaiRo"] # 和牌方式
+    Mj_input.way_to_hepai = ["wayToHepaiZi"] # 和牌方式
     Mj_input.dora_num = "0" # 宝牌
     Mj_input.deep_dora_num = "0" # 里宝牌
-    Mj_input.position_select = "positionDong" # 自风
+    Mj_input.position_select = "positionOther" # 自风
     Mj_input.public_position_select = "publicPositionDong" # 场风
 
     # 通过majongdata 处理 Mj_input.hand 和 Mj_input.inputMPdata* 数据
