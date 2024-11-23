@@ -77,8 +77,8 @@ def xt_hand_count():
     return render_template("mahjong_XT.html",output=output)
 
 @app.route("/mahjong_GB",methods=["GET","POST","PUT"])
-def pleasewait(): # 开发中
-    return render_template("index.html")
+def gb_page(): # 开发中
+    return render_template("mahjong_GB.html")
 
 # count_page 用于导向立直麻将解析界面 get_count 用于返回立直麻将解析界面结果值
 @app.route("/mahjong_RC",methods=["GET","POST","PUT"])
